@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { uniqueID } from '../utility';
+import { getContents } from '../service';
 
 export default class PathSelect extends React.Component {
   state = {
@@ -10,13 +11,20 @@ export default class PathSelect extends React.Component {
   };
 
   componentDidMount() {
-    return this.onChange(-1, { target: {} });
+    return this.onChange(-1, { target: { value: '' } });
   }
 
-  getNextLevel(index, value) {
+  async getNextLevel() {
+    const {
+      state: { path },
+      props: { repository }
+    } = this;
+
     return {
       label: '/',
-      list: Array((index += 2)).fill(index)
+      list: (await getContents(repository, path.join('/'))).map(
+        ({ name }) => name
+      )
     };
   }
 
@@ -26,10 +34,13 @@ export default class PathSelect extends React.Component {
       target: { value }
     }
   ) {
-    const { list } = this.state,
-      level = await this.getNextLevel(index, value);
+    const { path, list } = this.state;
 
-    list.splice(index + 1, Infinity, level);
+    path.splice(++index, Infinity, value);
+
+    const level = await this.getNextLevel();
+
+    list.splice(index, Infinity, level);
 
     this.setState({ list });
   }
