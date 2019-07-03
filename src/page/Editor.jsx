@@ -3,6 +3,7 @@ import marked from 'marked';
 
 import { readAs } from '../utility';
 import PathSelect from '../component/PathSelect';
+import MarkdownEditor from '../component/MarkdownEditor';
 
 export default class Editor extends React.Component {
   state = {
@@ -17,6 +18,10 @@ export default class Editor extends React.Component {
     this.setState({ content });
   };
 
+  upload(files) {
+    return Promise.all(files.map(file => readAs(file)));
+  }
+
   render() {
     const { repository } = this.props;
 
@@ -29,7 +34,9 @@ export default class Editor extends React.Component {
               <PathSelect repository={repository} onLoad={this.setContent} />
             </div>
           </div>
-          <div className="form-group">{this.state.content}</div>
+          <div className="form-group">
+            <MarkdownEditor uploadFiles={this.upload} />
+          </div>
         </form>
       </main>
     );

@@ -2,6 +2,34 @@ export function uniqueID() {
   return parseInt((Math.random() + '').slice(2)).toString(36);
 }
 
+const sandbox = document.createElement('template'),
+  fragment = document.createDocumentFragment();
+
+/**
+ * @param {String} HTML
+ *
+ * @return {Node[]}
+ */
+export function parseDOM(HTML) {
+  sandbox.innerHTML = HTML;
+
+  return Array.from(sandbox.content.childNodes).map(
+    node => (node.remove(), node)
+  );
+}
+
+/**
+ * @param {...Node} nodes
+ */
+export function insertToCursor(...nodes) {
+  fragment.append(...nodes);
+
+  window
+    .getSelection()
+    .getRangeAt(0)
+    .insertNode(fragment);
+}
+
 const DataURI = /^data:(.+?\/(.+?))?(;base64)?,([\s\S]+)/;
 /**
  * @param {String} URI - Data URI
