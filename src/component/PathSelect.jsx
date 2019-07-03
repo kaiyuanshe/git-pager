@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { uniqueID } from '../utility';
+import { uniqueID, blobFrom } from '../utility';
 import { getContents } from '../service';
 
 export default class PathSelect extends React.Component {
@@ -17,15 +17,20 @@ export default class PathSelect extends React.Component {
   async getNextLevel() {
     const {
       state: { path },
-      props: { repository }
+      props: { repository, onLoad }
     } = this;
 
-    return {
-      label: '/',
-      list: (await getContents(repository, path.join('/'))).map(
-        ({ name }) => name
-      )
-    };
+    const contents = await getContents(repository, path.join('/'));
+
+    if (contents instanceof Array)
+      return {
+        label: '/',
+        list: contents.map(({ name }) => name)
+      };
+
+    const { type, name, content } = contents;
+
+    if (type === 'file') onLoad(name, blobFrom(`data:;base64,${content}`));
   }
 
   async onChange(
@@ -40,7 +45,8 @@ export default class PathSelect extends React.Component {
 
     const level = await this.getNextLevel();
 
-    list.splice(index, Infinity, level);
+    if (level != null) list.splice(index, Infinity, level);
+    else list.length = index;
 
     this.setState({ list });
   }
@@ -55,7 +61,7 @@ export default class PathSelect extends React.Component {
             LID = `list-${UID}-${index}`;
 
           return (
-            <>
+            <span key={IID}>
               <input
                 type="text"
                 id={IID}
@@ -64,13 +70,13 @@ export default class PathSelect extends React.Component {
               />
               <datalist id={LID}>
                 {list.map(item => (
-                  <option value={item} />
+                  <option value={item} key={item} />
                 ))}
               </datalist>
               <label htmlFor={IID} style={{ padding: '0 0.5rem' }}>
                 {label}
               </label>
-            </>
+            </span>
           );
         })}
       </>
