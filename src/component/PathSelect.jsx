@@ -6,9 +6,15 @@ import { getContents } from '../service';
 export default class PathSelect extends React.Component {
   state = {
     UID: uniqueID(),
-    list: [],
-    path: []
+    path: [],
+    list: []
   };
+
+  reset() {
+    const { path, list } = this.state;
+
+    this.setState({ path: path.slice(0, 1), list: list.slice(0, 1) });
+  }
 
   componentDidMount() {
     return this.onChange(-1, { target: { value: '' } });
@@ -61,9 +67,10 @@ export default class PathSelect extends React.Component {
             LID = `list-${UID}-${index}`;
 
           return (
-            <span key={IID}>
+            <span key={IID} className="form-inline d-inline-flex">
               <input
                 type="text"
+                className="form-control"
                 id={IID}
                 list={LID}
                 onChange={this.onChange.bind(this, index)}
@@ -73,7 +80,7 @@ export default class PathSelect extends React.Component {
                   <option value={item} key={item} />
                 ))}
               </datalist>
-              <label htmlFor={IID} style={{ padding: '0 0.5rem' }}>
+              <label htmlFor={IID} className="pl-2 pr-2">
                 {label}
               </label>
             </span>

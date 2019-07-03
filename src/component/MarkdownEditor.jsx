@@ -1,5 +1,6 @@
 import React from 'react';
 import * as MarkdownIME from 'markdown-ime';
+import marked from 'marked';
 
 import { parseDOM, insertToCursor } from '../utility';
 
@@ -8,6 +9,10 @@ export default class MarkdownEditor extends React.Component {
 
   componentDidMount() {
     MarkdownIME.Enhance(this.root);
+  }
+
+  set raw(code) {
+    this.root.innerHTML = marked(code);
   }
 
   handleFiles = async event => {
