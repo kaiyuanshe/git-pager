@@ -1,0 +1,11 @@
+.editor {
+  position: relative;
+}
+.editor::before {
+  position: absolute;
+  right: 0;
+  top: 0;
+  padding: 0.3rem 0.5rem;
+  background: white;
+  content: 'count: ' attr(data-count);
+}

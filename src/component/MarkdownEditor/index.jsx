@@ -2,25 +2,37 @@ import React from 'react';
 import * as MarkdownIME from 'markdown-ime';
 import marked from 'marked';
 
-import { parseDOM, insertToCursor } from '../utility';
+import { debounce, parseDOM, insertToCursor } from '../../utility';
+
+import STYLE from './index.module.css';
 
 export default class MarkdownEditor extends React.Component {
   root;
 
+  state = {
+    count: 0
+  };
+
   componentDidMount() {
     MarkdownIME.Enhance(this.root);
   }
+
+  countText = debounce(() => {
+    this.setState({ count: this.root.textContent.trim().length });
+  });
 
   set raw(code) {
     this.root.innerHTML = marked(code);
   }
 
   handleFiles = async event => {
-    event.preventDefault();
-
     var { files } = event.dataTransfer || event.clipboardData;
 
     files = [...files];
+
+    if (!files[0]) return;
+
+    event.preventDefault();
 
     var list = await this.props.uploadFiles(files);
 
@@ -45,8 +57,10 @@ export default class MarkdownEditor extends React.Component {
       <div
         contentEditable
         ref={node => (this.root = node)}
-        className="form-control"
+        className={`form-control ${STYLE.editor}`}
         style={{ height: 'auto' }}
+        data-count={this.state.count}
+        onInput={this.countText}
         onPaste={this.handleFiles}
         onDrop={this.handleFiles}
       ></div>

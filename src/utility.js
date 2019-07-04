@@ -2,6 +2,27 @@ export function uniqueID() {
   return parseInt((Math.random() + '').slice(2)).toString(36);
 }
 
+/**
+ * @param {Function} origin
+ * @param {Number}   [interval=0.25] - Seconds
+ *
+ * @return {Function}
+ *
+ * @see https://web-cell.dev/DOM-Renderer/function/index.html#static-function-debounce
+ */
+export function debounce(origin, interval = 0.25) {
+  var timer;
+
+  return function() {
+    clearTimeout(timer);
+
+    timer = setTimeout(
+      origin.bind.apply(origin, [].concat.apply([this], arguments)),
+      interval * 1000
+    );
+  };
+}
+
 const sandbox = document.createElement('template'),
   fragment = document.createDocumentFragment();
 
@@ -36,7 +57,7 @@ const DataURI = /^data:(.+?\/(.+?))?(;base64)?,([\s\S]+)/;
  *
  * @return {Blob}
  *
- * @see https://web-cell.dev/WebCell/file/source/utility/resource.js.html#lineNumber190
+ * @see https://web-cell.dev/WebCell/function/index.html#static-function-blobFrom
  */
 export function blobFrom(URI) {
   var [_, type, __, base64, data] = DataURI.exec(URI) || [];
@@ -59,7 +80,7 @@ export function blobFrom(URI) {
  *
  * @return {Promise<String|ArrayBuffer>}
  *
- * @see https://web-cell.dev/WebCell/file/source/utility/resource.js.html#lineNumber211
+ * @see https://web-cell.dev/WebCell/function/index.html#static-function-readAs
  */
 export function readAs(file, type = 'DataURL', encoding = 'UTF-8') {
   const reader = new FileReader();
