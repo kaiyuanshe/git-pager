@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { uniqueID, blobFrom } from '../utility';
+import { uniqueID, blobFrom, debounce } from '../utility';
 import { getContents } from '../service';
 
 export default class PathSelect extends React.Component {
@@ -20,31 +20,44 @@ export default class PathSelect extends React.Component {
     return this.onChange(-1, { target: { value: '' } });
   }
 
+  get path() {
+    return this.state.path
+      .filter(Boolean)
+      .slice(0, -1)
+      .join('/');
+  }
+
+  get name() {
+    return this.state.path.slice(-1)[0];
+  }
+
   async getNextLevel() {
     const {
-      state: { path },
+      path,
+      name,
       props: { repository, onLoad }
     } = this;
 
-    const contents = await getContents(repository, path.join('/'));
+    try {
+      const contents = await getContents(repository, `${path}/${name}`);
 
-    if (contents instanceof Array)
-      return {
-        label: '/',
-        list: contents.map(({ name }) => name)
-      };
+      if (contents instanceof Array)
+        return {
+          label: '/',
+          list: contents.map(({ name }) => name)
+        };
 
-    const { type, name, content } = contents;
+      const { type, name: fileName, content } = contents;
 
-    if (type === 'file') onLoad(name, blobFrom(`data:;base64,${content}`));
+      if (type === 'file')
+        onLoad(fileName, blobFrom(`data:;base64,${content}`));
+    } catch (error) {
+      if (error instanceof URIError && error.response.status === 404)
+        onLoad(name);
+    }
   }
 
-  async onChange(
-    index,
-    {
-      target: { value }
-    }
-  ) {
+  changeLevel = debounce(async (index, value) => {
     const { path, list } = this.state;
 
     path.splice(++index, Infinity, value);
@@ -55,6 +68,15 @@ export default class PathSelect extends React.Component {
     else list.length = index;
 
     this.setState({ list });
+  });
+
+  onChange(
+    index,
+    {
+      target: { value }
+    }
+  ) {
+    this.changeLevel(index, value);
   }
 
   render() {

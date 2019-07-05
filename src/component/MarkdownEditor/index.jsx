@@ -28,28 +28,26 @@ export default class MarkdownEditor extends React.Component {
   handleFiles = async event => {
     var { files } = event.dataTransfer || event.clipboardData;
 
-    files = [...files];
-
     if (!files[0]) return;
 
     event.preventDefault();
 
-    var list = await this.props.uploadFiles(files);
+    files = Array.from(files, file => {
+      const type = file.type.split('/')[0];
 
-    list = Array.from(list, (URL, index) => {
-      const type = files[index].type.split('/')[0];
+      file = URL.createObjectURL(file);
 
       switch (type) {
         case 'image':
-          return parseDOM(`<img src=${URL}>`);
+          return parseDOM(`<img src=${file}>`);
         case 'audio':
-          return parseDOM(`<audio src=${URL}></audio>`);
+          return parseDOM(`<audio src=${file}></audio>`);
         case 'video':
-          return parseDOM(`<video src=${URL}></video>`);
+          return parseDOM(`<video src=${file}></video>`);
       }
     });
 
-    insertToCursor(...list.flat());
+    insertToCursor(...files.flat());
   };
 
   render() {

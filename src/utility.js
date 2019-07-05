@@ -74,7 +74,7 @@ export function blobFrom(URI) {
 }
 
 /**
- * @param {File}   file
+ * @param {Blob}   file
  * @param {String} [type='DataURL']   - https://developer.mozilla.org/en-US/docs/Web/API/FileReader#Methods
  * @param {String} [encoding='UTF-8'] - https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsText#Parameters
  *
