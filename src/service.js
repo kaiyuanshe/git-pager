@@ -1,4 +1,6 @@
-const token = new URLSearchParams(window.location.search).get('token');
+import { parseURLData } from './utility';
+
+const { token } = parseURLData();
 
 /**
  * @param {String} path
@@ -23,6 +25,13 @@ export async function request(path, options = {}) {
     throw Object.assign(new URIError(data.message), { data, response });
 
   return data;
+}
+
+/**
+ * @return {Promise<Object>}
+ */
+export function getCurrentUser() {
+  return request('/user');
 }
 
 /**

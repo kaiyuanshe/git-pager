@@ -80,7 +80,8 @@ export default class PathSelect extends React.Component {
   }
 
   render() {
-    const { UID, list } = this.state;
+    const { UID, list } = this.state,
+      { required } = this.props;
 
     return (
       <>
@@ -96,6 +97,7 @@ export default class PathSelect extends React.Component {
                 id={IID}
                 list={LID}
                 onChange={this.onChange.bind(this, index)}
+                required={!index && required}
               />
               <datalist id={LID}>
                 {list.map(item => (

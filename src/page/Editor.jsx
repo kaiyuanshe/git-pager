@@ -64,13 +64,14 @@ export default class Editor extends React.Component {
                   ref={node => (this.selector = node)}
                   repository={repository}
                   onLoad={this.setContent}
+                  required
                 />
               </div>
             </div>
             <div className="form-group row">
               <label className="col-sm-2 col-form-label">Commit message</label>
               <span className="col-sm-7">
-                <textarea className="form-control"></textarea>
+                <textarea className="form-control" required></textarea>
               </span>
               <span className="col-sm-3 d-flex justify-content-between align-items-center">
                 <input type="submit" className="btn btn-primary" />

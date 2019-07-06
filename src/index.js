@@ -1,14 +1,24 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-import './index.css';
-import Editor from './page/Editor';
+import { parseURLData } from './utility';
 
-const repository = new URLSearchParams(window.location.search).get(
-  'repository'
-);
+import PageFrame from './page';
+import navData from './index.json';
+
+const { repository } = parseURLData();
 
 ReactDOM.render(
-  <Editor repository={repository} />,
+  <PageFrame {...{ navData, repository }} />,
   document.getElementById('root')
 );
+
+window.addEventListener('unhandledrejection', event => {
+  const { reason } = event;
+
+  if (!(reason instanceof URIError)) return;
+
+  event.preventDefault();
+
+  window.alert(reason.message);
+});

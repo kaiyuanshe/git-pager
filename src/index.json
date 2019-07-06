@@ -1,0 +1,12 @@
+{
+  "title": "Git Pager",
+  "menu": [
+    {
+      "title": "Editor"
+    },
+    {
+      "title": "Source code",
+      "href": "https://github.com/kaiyuanshe/git-pager"
+    }
+  ]
+}

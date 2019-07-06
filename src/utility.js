@@ -51,6 +51,43 @@ export function insertToCursor(...nodes) {
     .insertNode(fragment);
 }
 
+/**
+ * @param {String|URL} URI - Full URL of a resource
+ *
+ * @return {Boolean} Whether it's cross domain to current page
+ *
+ * @see https://web-cell.dev/WebCell/function/index.html#static-function-isXDomain
+ */
+export function isXDomain(URI) {
+  return new URL(URI, document.baseURI).origin !== window.location.origin;
+}
+
+/**
+ * @param {String} [raw=window.location.search]
+ *
+ * @return {Object}
+ */
+export function parseURLData(raw = window.location.search) {
+  const data = {};
+
+  for (let [key, value] of new URLSearchParams(/(?:\?|#)?(\S+)/.exec(raw)[1])) {
+    try {
+      value = JSON.parse(value);
+    } catch {}
+
+    if (!(data[key] != null)) {
+      data[key] = value;
+      continue;
+    }
+
+    if (!(data[key] instanceof Array)) data[key] = [data[key]];
+
+    data[key].push(value);
+  }
+
+  return data;
+}
+
 const DataURI = /^data:(.+?\/(.+?))?(;base64)?,([\s\S]+)/;
 /**
  * @param {String} URI - Data URI
