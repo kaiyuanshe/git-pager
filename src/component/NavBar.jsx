@@ -15,7 +15,7 @@ export default function NavBar({
 
   return (
     <nav
-      className={`navbar navbar-expand-${expand} navbar-${theme} bg-${background}`}
+      className={`navbar navbar-expand-${expand} navbar-${theme} bg-${background} sticky-top`}
     >
       <a className="navbar-brand" href=".">
         {title}

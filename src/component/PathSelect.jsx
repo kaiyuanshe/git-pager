@@ -1,115 +1,68 @@
 import React from 'react';
+import CascadeSelect from './CascadeSelect';
 
-import { uniqueID, blobFrom, debounce } from '../utility';
+import { blobFrom } from '../utility';
 import { getContents } from '../service';
 
-export default class PathSelect extends React.Component {
-  state = {
-    UID: uniqueID(),
-    path: [],
-    list: []
-  };
+export default class PathSelect extends CascadeSelect {
+  constructor(props) {
+    super(props);
+
+    this.filter = props.filter instanceof Function ? props.filter : Boolean;
+
+    this.state.html_url = '';
+  }
 
   reset() {
-    const { path, list } = this.state;
+    super.reset();
 
-    this.setState({ path: path.slice(0, 1), list: list.slice(0, 1) });
-  }
-
-  componentDidMount() {
-    return this.onChange(-1, { target: { value: '' } });
-  }
-
-  get path() {
-    return this.state.path
-      .filter(Boolean)
-      .slice(0, -1)
-      .join('/');
-  }
-
-  get name() {
-    return this.state.path.slice(-1)[0];
+    this.setState({ html_url: '' });
   }
 
   async getNextLevel() {
     const {
-      path,
       name,
+      pathName,
       props: { repository, onLoad }
     } = this;
 
     try {
-      const contents = await getContents(repository, `${path}/${name}`);
+      const contents = await getContents(repository, pathName);
 
       if (contents instanceof Array)
         return {
           label: '/',
-          list: contents.map(({ name }) => name)
+          list: contents.filter(this.filter).map(({ name }) => name)
         };
 
-      const { type, name: fileName, content } = contents;
+      const { type, content, html_url } = contents;
 
-      if (type === 'file')
-        onLoad(fileName, blobFrom(`data:;base64,${content}`));
+      if (type !== 'file') return;
+
+      this.setState({ html_url });
+
+      onLoad(html_url, blobFrom(`data:;base64,${content}`));
     } catch (error) {
-      if (error instanceof URIError && error.response.status === 404)
-        onLoad(name);
+      if (
+        error instanceof URIError &&
+        error.response.status === 404 &&
+        name.includes('.')
+      )
+        onLoad(`https://github.com/${repository}/blob/master/${pathName}`);
     }
-  }
-
-  changeLevel = debounce(async (index, value) => {
-    const { path, list } = this.state;
-
-    path.splice(++index, Infinity, value);
-
-    const level = await this.getNextLevel();
-
-    if (level != null) list.splice(index, Infinity, level);
-    else list.length = index;
-
-    this.setState({ list });
-  });
-
-  onChange(
-    index,
-    {
-      target: { value }
-    }
-  ) {
-    this.changeLevel(index, value);
   }
 
   render() {
-    const { UID, list } = this.state,
-      { required } = this.props;
+    const { html_url } = this.state;
 
     return (
       <>
-        {list.map(({ label, list }, index) => {
-          const IID = `input-${UID}-${index}`,
-            LID = `list-${UID}-${index}`;
-
-          return (
-            <span key={IID} className="form-inline d-inline-flex">
-              <input
-                type="text"
-                className="form-control"
-                id={IID}
-                list={LID}
-                onChange={this.onChange.bind(this, index)}
-                required={!index && required}
-              />
-              <datalist id={LID}>
-                {list.map(item => (
-                  <option value={item} key={item} />
-                ))}
-              </datalist>
-              <label htmlFor={IID} className="pl-2 pr-2">
-                {label}
-              </label>
-            </span>
-          );
-        })}
+        {super.render()}
+        {html_url && (
+          <a className="d-block pt-2" target="_blank" href={html_url}>
+            <code>{html_url}</code>
+          </a>
+        )}
       </>
     );
   }

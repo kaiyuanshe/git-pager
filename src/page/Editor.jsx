@@ -3,22 +3,44 @@ import React from 'react';
 import PathSelect from '../component/PathSelect';
 import MarkdownEditor from '../component/MarkdownEditor';
 
-import { readAs } from '../utility';
+import { readAs, debounce } from '../utility';
 import { updateContent } from '../service';
+
+const GitHub_Relative = /^https:\/\/github.com\/(?:[^/]+\/){2}(?:tree|blob|raw)\/[^/]+\//;
+
+const pageURL = window.location.href.split('?')[0],
+  rules = {
+    relative_URL: {
+      filter: node =>
+        ['a', 'area', 'img'].includes(node.nodeName.toLowerCase()) &&
+        GitHub_Relative.test(node.href || node.src),
+      replacement(_, { href, src, title, textContent, alt }) {
+        const path = (href || src).replace(GitHub_Relative, '');
+
+        if ((title = title.trim())) title = ` '${title}'`;
+
+        return src
+          ? `![${alt}](${path}${title})`
+          : `[${textContent.trim()}](${path}${title})`;
+      }
+    }
+  };
 
 export default class Editor extends React.Component {
   selector;
   core;
   method;
+  URL;
 
-  setContent = async (name, data) => {
+  setContent = async (URL, data) => {
     this.method = data ? 'PUT' : 'POST';
 
     if (!(data instanceof Blob)) return;
 
     const content = await readAs(data, 'Text');
 
-    if (/\.(md|markdown)$/i.test(name)) this.core.raw = content;
+    this.URL = URL;
+    this.core.raw = content;
   };
 
   reset = () => {
@@ -26,25 +48,44 @@ export default class Editor extends React.Component {
     this.core.raw = '';
   };
 
+  fixURL = debounce(() => {
+    const { repository } = this.props;
+
+    for (let element of this.core.root.querySelectorAll('[href], [src]')) {
+      let URI = element.href || element.src;
+
+      if (URI.startsWith(pageURL)) URI = URI.slice(pageURL.length);
+
+      URI = new URL(URI, this.URL);
+
+      if ('src' in element)
+        element.src = (URI + '').replace(
+          repository + '/blob/',
+          repository + '/raw/'
+        );
+      else element.href = URI;
+    }
+  });
+
   submit = async event => {
     event.preventDefault();
 
     const { repository } = this.props,
       {
-        selector: { path, name },
-        core: { root },
+        selector: { path, pathName },
+        core,
         method
       } = this;
 
     const media = [].filter.call(
-      root.querySelectorAll('img[src], audio[src], video[src]'),
+      core.root.querySelectorAll('img[src], audio[src], video[src]'),
       ({ src }) => new URL(src).protocol === 'blob:'
     );
 
     for (let file of media)
       await updateContent(repository, `${path}/${file.name}`, file);
 
-    await updateContent(repository, `${path}/${name}`, root.raw, method);
+    await updateContent(repository, pathName, core.raw, method);
 
     window.alert('Submitted');
   };
@@ -55,34 +96,36 @@ export default class Editor extends React.Component {
     return (
       <main className="card m-3">
         <form className="card-body" onReset={this.reset} onSubmit={this.submit}>
-          <fieldset className="sticky-top bg-white">
-            <h1 className="card-title">{repository}</h1>
-            <div className="form-group row">
-              <label className="col-sm-2 col-form-label">File path</label>
-              <div className="col-sm-10">
-                <PathSelect
-                  ref={node => (this.selector = node)}
-                  repository={repository}
-                  onLoad={this.setContent}
-                  required
-                />
-              </div>
+          <h1 className="card-title">{repository}</h1>
+          <div className="form-group row">
+            <label className="col-sm-2 col-form-label">File path</label>
+            <div className="col-sm-10">
+              <PathSelect
+                ref={node => (this.selector = node)}
+                repository={repository}
+                filter={({ type, name }) =>
+                  type === 'dir' ||
+                  (type === 'file' && /\.(md|markdown)$/i.test(name))
+                }
+                onLoad={this.setContent}
+                required
+              />
             </div>
-            <div className="form-group row">
-              <label className="col-sm-2 col-form-label">Commit message</label>
-              <span className="col-sm-7">
-                <textarea className="form-control" required></textarea>
-              </span>
-              <span className="col-sm-3 d-flex justify-content-between align-items-center">
-                <input type="submit" className="btn btn-primary" />
-                <input type="reset" className="btn btn-danger" />
-              </span>
-            </div>
-          </fieldset>
+          </div>
+          <div className="form-group row">
+            <label className="col-sm-2 col-form-label">Commit message</label>
+            <span className="col-sm-7">
+              <textarea className="form-control" required></textarea>
+            </span>
+            <span className="col-sm-3 d-flex justify-content-between align-items-center">
+              <input type="submit" className="btn btn-primary" />
+              <input type="reset" className="btn btn-danger" />
+            </span>
+          </div>
 
-          <div className="form-group">
+          <div className="form-group" onInput={this.fixURL}>
             <label>Content</label>
-            <MarkdownEditor ref={node => (this.core = node)} />
+            <MarkdownEditor ref={node => (this.core = node)} rules={rules} />
           </div>
         </form>
       </main>

@@ -9,3 +9,6 @@
   background: white;
   content: 'count: ' attr(data-count);
 }
+.editor img {
+  max-width: 100%;
+}

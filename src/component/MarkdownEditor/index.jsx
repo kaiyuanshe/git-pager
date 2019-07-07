@@ -1,6 +1,8 @@
 import React from 'react';
+
 import * as MarkdownIME from 'markdown-ime';
 import marked from 'marked';
+import TurnDown from './TurnDown';
 
 import { debounce, parseDOM, insertToCursor } from '../../utility';
 
@@ -13,6 +15,12 @@ export default class MarkdownEditor extends React.Component {
     count: 0
   };
 
+  constructor(props) {
+    super(props).convertor = new TurnDown();
+
+    for (let key in props.rules) this.convertor.addRule(key, props.rules[key]);
+  }
+
   componentDidMount() {
     MarkdownIME.Enhance(this.root);
   }
@@ -23,6 +31,16 @@ export default class MarkdownEditor extends React.Component {
 
   set raw(code) {
     this.root.innerHTML = marked(code);
+
+    this.countText();
+
+    this.root.dispatchEvent(
+      new CustomEvent('input', { bubbles: true, detail: this.root.textContent })
+    );
+  }
+
+  get raw() {
+    return this.convertor.turndown(this.root);
   }
 
   handleFiles = async event => {
