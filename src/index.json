@@ -2,7 +2,8 @@
   "title": "Git Pager",
   "menu": [
     {
-      "title": "Editor"
+      "title": "Editor",
+      "href": "#top"
     },
     {
       "title": "Source code",

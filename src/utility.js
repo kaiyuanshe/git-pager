@@ -88,6 +88,21 @@ export function parseURLData(raw = window.location.search) {
   return data;
 }
 
+/**
+ * @param {String} raw - Binary data
+ *
+ * @return {String} Base64 encoded data
+ *
+ * @see https://web-cell.dev/WebCell/function/index.html#static-function-encodeBase64
+ */
+export function encodeBase64(raw) {
+  return window.btoa(
+    encodeURIComponent(raw).replace(/%([0-9A-F]{2})/g, (_, p1) =>
+      String.fromCharCode('0x' + p1)
+    )
+  );
+}
+
 const DataURI = /^data:(.+?\/(.+?))?(;base64)?,([\s\S]+)/;
 /**
  * @param {String} URI - Data URI

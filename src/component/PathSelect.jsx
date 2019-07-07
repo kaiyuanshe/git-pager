@@ -35,13 +35,13 @@ export default class PathSelect extends CascadeSelect {
           list: contents.filter(this.filter).map(({ name }) => name)
         };
 
-      const { type, content, html_url } = contents;
+      const { type, content, html_url, sha } = contents;
 
       if (type !== 'file') return;
 
       this.setState({ html_url });
 
-      onLoad(html_url, blobFrom(`data:;base64,${content}`));
+      onLoad(html_url, sha, blobFrom(`data:;base64,${content}`));
     } catch (error) {
       if (
         error instanceof URIError &&

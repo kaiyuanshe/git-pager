@@ -1,6 +1,7 @@
 import React from 'react';
 
 import PathSelect from '../component/PathSelect';
+import { ListField } from '../component/JSONEditor';
 import MarkdownEditor from '../component/MarkdownEditor';
 
 import { readAs, debounce } from '../utility';
@@ -29,17 +30,16 @@ const pageURL = window.location.href.split('?')[0],
 export default class Editor extends React.Component {
   selector;
   core;
-  method;
   URL;
+  SHA;
 
-  setContent = async (URL, data) => {
-    this.method = data ? 'PUT' : 'POST';
-
+  setContent = async (URL, SHA, data) => {
     if (!(data instanceof Blob)) return;
 
     const content = await readAs(data, 'Text');
 
     this.URL = URL;
+    this.SHA = SHA;
     this.core.raw = content;
   };
 
@@ -73,9 +73,9 @@ export default class Editor extends React.Component {
     const { repository } = this.props,
       {
         selector: { path, pathName },
-        core,
-        method
-      } = this;
+        core
+      } = this,
+      { message } = event.target.elements;
 
     const media = [].filter.call(
       core.root.querySelectorAll('img[src], audio[src], video[src]'),
@@ -83,9 +83,20 @@ export default class Editor extends React.Component {
     );
 
     for (let file of media)
-      await updateContent(repository, `${path}/${file.name}`, file);
+      await updateContent(
+        repository,
+        `${path}/${file.name}`,
+        '[Upload] from Git-Pager',
+        file
+      );
 
-    await updateContent(repository, pathName, core.raw, method);
+    await updateContent(
+      repository,
+      pathName,
+      message.value.trim(),
+      core.raw,
+      this.SHA
+    );
 
     window.alert('Submitted');
   };
@@ -115,12 +126,21 @@ export default class Editor extends React.Component {
           <div className="form-group row">
             <label className="col-sm-2 col-form-label">Commit message</label>
             <span className="col-sm-7">
-              <textarea className="form-control" required></textarea>
+              <textarea
+                className="form-control"
+                name="message"
+                required
+              ></textarea>
             </span>
             <span className="col-sm-3 d-flex justify-content-between align-items-center">
               <input type="submit" className="btn btn-primary" />
               <input type="reset" className="btn btn-danger" />
             </span>
+          </div>
+
+          <div className="form-group">
+            <label>Meta</label>
+            <ListField type="object" />
           </div>
 
           <div className="form-group" onInput={this.fixURL}>
