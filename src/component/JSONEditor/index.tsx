@@ -4,7 +4,9 @@ import AddBar from './AddBar';
 
 import { DataMeta } from './types';
 
-export class ListField extends React.Component<{ value: any }, DataMeta> {
+type FieldProps = { value: Object | Array<any> | null };
+
+export class ListField extends React.Component<FieldProps, DataMeta> {
   state = {
     ...ListField.metaOf(this.props.value)
   };
@@ -69,16 +71,18 @@ export class ListField extends React.Component<{ value: any }, DataMeta> {
         return (
           <input
             type="text"
-            className="form-control w-75"
+            className="form-control"
             value={value}
             placeholder="Value"
           />
         );
       case 'text':
         return (
-          <textarea className="form-control w-75" placeholder="Value">
-            {value}
-          </textarea>
+          <textarea
+            className="form-control"
+            value={value}
+            placeholder="Value"
+          ></textarea>
         );
       default:
         return <ListField value={value} />;
@@ -103,8 +107,9 @@ export class ListField extends React.Component<{ value: any }, DataMeta> {
             {field_type === 'object' && (
               <input
                 type="text"
-                className="form-control w-25"
+                className="form-control"
                 value={key}
+                required
                 placeholder="Key"
               />
             )}
