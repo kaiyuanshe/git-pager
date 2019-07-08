@@ -2,7 +2,12 @@
   "name": "git-pager",
   "version": "0.6.0",
   "private": true,
+  "author": "shiy2008@gmail.com",
   "dependencies": {
+    "@types/jest": "24.0.15",
+    "@types/node": "12.0.12",
+    "@types/react": "16.8.23",
+    "@types/react-dom": "16.8.4",
     "classnames": "^2.2.6",
     "markdown-ime": "^1.0.3",
     "marked": "^0.7.0",
@@ -10,7 +15,8 @@
     "react-dom": "^16.8.6",
     "react-scripts": "3.0.1",
     "turndown": "^5.0.3",
-    "turndown-plugin-gfm": "^1.0.2"
+    "turndown-plugin-gfm": "^1.0.2",
+    "typescript": "3.5.2"
   },
   "devDependencies": {
     "husky": "^3.0.0",
@@ -18,7 +24,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "format": "prettier --write \"{,!(node_modules|.git|build)/**/}*.{html,md,css,less,js,json,jsx}\"",
+    "format": "prettier --write \"{,!(node_modules|.git|build)/**/}*.{html,md,css,less,js,json,ts,jsx,tsx}\"",
     "build": "npm run format  &&  react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

@@ -12,6 +12,7 @@ export default function AddBar({ onSelect }) {
     <nav>
       {Object.entries(type_map).map(([key, { title, icon }]) => (
         <button
+          key={key}
           type="button"
           className={'btn btn-sm btn-success m-1 fas fa-' + icon}
           title={title}

@@ -140,7 +140,7 @@ export default class Editor extends React.Component {
 
           <div className="form-group">
             <label>Meta</label>
-            <ListField type="object" />
+            <ListField value={{}} />
           </div>
 
           <div className="form-group" onInput={this.fixURL}>
