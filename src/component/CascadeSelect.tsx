@@ -1,19 +1,30 @@
 import React from 'react';
 import { uniqueID, debounce } from '../utility';
 
-export default class CascadeSelect extends React.Component {
+interface SelectProps {
+  required: boolean;
+}
+
+interface SelectState {
+  path?: string[];
+  list: any[][];
+}
+
+interface LevelItem {
+  label?: string;
+  list: string[];
+}
+
+export default abstract class CascadeSelect<
+  P,
+  S = null
+> extends React.Component<SelectProps | P, SelectState | S> {
+  UID = uniqueID();
+
   state = {
-    UID: uniqueID(),
     path: [],
     list: []
   };
-
-  constructor(props) {
-    super(props);
-
-    if (this.constructor === CascadeSelect)
-      throw TypeError('CascadeSelect is an Abstract Class');
-  }
 
   get path() {
     return this.state.path
@@ -40,13 +51,15 @@ export default class CascadeSelect extends React.Component {
     this.changeLevel(-1, '');
   }
 
-  changeLevel = debounce(async (index, value) => {
-    const { path, list } = this.state;
+  abstract async getNextLevel(): Promise<LevelItem | undefined>;
 
+  changeLevel = debounce(async (index: number, value: string) => {
+    const { path, list } = this.state;
+    // @ts-ignore
     path.splice(index, Infinity, value);
 
     const level = await this.getNextLevel();
-
+    // @ts-ignore
     if (level != null) list.splice(++index, Infinity, level);
     else list.length = ++index;
 
@@ -54,12 +67,16 @@ export default class CascadeSelect extends React.Component {
   });
 
   render() {
-    const { UID, list } = this.state,
-      { required } = this.props;
+    const {
+      UID,
+      state: { list },
+      // @ts-ignore
+      props: { required }
+    } = this;
 
     return (
       <>
-        {list.map(({ label, list }, index) => {
+        {list.map(({ label, list }: LevelItem, index) => {
           const IID = `input-${UID}-${index}`,
             LID = `list-${UID}-${index}`;
 
@@ -70,6 +87,7 @@ export default class CascadeSelect extends React.Component {
                 className="form-control"
                 id={IID}
                 list={LID}
+                // @ts-ignore
                 onChange={({ target: { value } }) =>
                   (value = value.trim()) && this.changeLevel(index, value)
                 }

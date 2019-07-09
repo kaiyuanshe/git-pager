@@ -4,12 +4,20 @@ import CascadeSelect from './CascadeSelect';
 import { blobFrom } from '../utility';
 import { getContents } from '../service';
 
-export default class PathSelect extends CascadeSelect {
-  constructor(props) {
+interface SelectProps {
+  repository: string;
+  filter?: (name: string) => boolean;
+  onLoad?: (URL: string, data: Blob, SHA: string) => void;
+}
+
+export default class PathSelect extends CascadeSelect<SelectProps> {
+  filter: (name: string) => boolean;
+
+  constructor(props: SelectProps) {
     super(props);
 
     this.filter = props.filter instanceof Function ? props.filter : Boolean;
-
+    // @ts-ignore
     this.state.html_url = '';
   }
 
@@ -23,6 +31,7 @@ export default class PathSelect extends CascadeSelect {
     const {
       name,
       pathName,
+      // @ts-ignore
       props: { repository, onLoad }
     } = this;
 
@@ -45,7 +54,9 @@ export default class PathSelect extends CascadeSelect {
     } catch (error) {
       if (
         error instanceof URIError &&
+        // @ts-ignore
         error.response.status === 404 &&
+        // @ts-ignore
         name.includes('.')
       )
         onLoad(`https://github.com/${repository}/blob/master/${pathName}`);
@@ -53,6 +64,7 @@ export default class PathSelect extends CascadeSelect {
   }
 
   render() {
+    // @ts-ignore
     const { html_url } = this.state;
 
     return (

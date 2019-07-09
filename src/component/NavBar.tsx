@@ -3,6 +3,20 @@ import classNames from 'classnames';
 
 import { uniqueID, isXDomain } from '../utility';
 
+interface MenuItem {
+  title: string;
+  href: string;
+}
+
+interface NavBarProps {
+  title: string;
+  menu: MenuItem[];
+  expand: string;
+  theme: string;
+  background: string;
+  rightSlot?: React.Component | React.ReactFragment;
+}
+
 export default function NavBar({
   title,
   menu = [],
@@ -10,7 +24,7 @@ export default function NavBar({
   theme = 'light',
   background = 'light',
   rightSlot
-}) {
+}: NavBarProps) {
   const UID = uniqueID();
 
   return (
@@ -42,7 +56,7 @@ export default function NavBar({
               <a
                 className="nav-link"
                 href={href}
-                target={isXDomain(href) ? '_blank' : null}
+                target={isXDomain(href) ? '_blank' : undefined}
               >
                 {title}
                 {!index && <span className="sr-only">(current)</span>}

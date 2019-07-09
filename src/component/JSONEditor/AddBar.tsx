@@ -7,7 +7,11 @@ const type_map = {
   array: { title: 'Ordered list', icon: 'list-ol' }
 };
 
-export default function AddBar({ onSelect }) {
+interface AddBarProps {
+  onSelect: (type: string) => void;
+}
+
+export default function AddBar({ onSelect }: AddBarProps) {
   return (
     <nav>
       {Object.entries(type_map).map(([key, { title, icon }]) => (

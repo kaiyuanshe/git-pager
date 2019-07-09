@@ -1,3 +1,15 @@
+/**
+ * @param {*} value
+ *
+ * @return {Boolean}
+ */
+export function isEmpty(value) {
+  return !(value != null) || (typeof value === 'number' && isNaN(value));
+}
+
+/**
+ * @return {String}
+ */
 export function uniqueID() {
   return parseInt((Math.random() + '').slice(2)).toString(36);
 }
@@ -68,14 +80,15 @@ export function isXDomain(URI) {
  * @return {Object}
  */
 export function parseURLData(raw = window.location.search) {
-  const data = {};
+  const data = {},
+    parameter = (/(?:\?|#)?(\S+)/.exec(raw) || '')[1];
 
-  for (let [key, value] of new URLSearchParams(/(?:\?|#)?(\S+)/.exec(raw)[1])) {
+  for (let [key, value] of new URLSearchParams(parameter)) {
     try {
       value = JSON.parse(value);
     } catch {}
 
-    if (!(data[key] != null)) {
+    if (isEmpty(data[key])) {
       data[key] = value;
       continue;
     }
