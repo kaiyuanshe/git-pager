@@ -14,7 +14,9 @@ export default function PageFrame({ navData, repository }) {
         background="dark"
         rightSlot={<UserBar />}
       />
-      <Editor repository={repository} />
+      <main className="container">
+        <Editor repository={repository} />
+      </main>
     </>
   );
 }

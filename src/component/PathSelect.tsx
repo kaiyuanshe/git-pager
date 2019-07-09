@@ -4,14 +4,19 @@ import CascadeSelect from './CascadeSelect';
 import { blobFrom } from '../utility';
 import { getContents } from '../service';
 
+interface GitContent {
+  type: string;
+  name: string;
+}
+
 interface SelectProps {
   repository: string;
-  filter?: (name: string) => boolean;
+  filter?: (content: GitContent) => boolean;
   onLoad?: (URL: string, data: Blob, SHA: string) => void;
 }
 
 export default class PathSelect extends CascadeSelect<SelectProps> {
-  filter: (name: string) => boolean;
+  filter: (name: GitContent) => boolean;
 
   constructor(props: SelectProps) {
     super(props);

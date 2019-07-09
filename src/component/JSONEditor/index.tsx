@@ -4,7 +4,35 @@ import AddBar from './AddBar';
 
 import { DataMeta } from './types';
 
-type FieldProps = { value: Object | Array<any> | null };
+interface FieldProps {
+  value: Object | Array<any> | null;
+  onChange?: (event: React.ChangeEvent) => void;
+}
+
+function dataChange(
+  target: any,
+  propertyKey: string,
+  descriptor: PropertyDescriptor
+) {
+  const method = target[propertyKey];
+  // @ts-ignore
+  descriptor.value = function(index: number, { target: { value: data } }) {
+    // @ts-ignore
+    const { children = [] } = this.state;
+
+    const item = children[index];
+
+    if (!item) return;
+    // @ts-ignore
+    method.call(this, item, data);
+    // @ts-ignore
+    const { onChange } = this.props;
+
+    if (onChange instanceof Function)
+      // @ts-ignore
+      onChange({ target: { value: this.state.value } });
+  };
+}
 
 export class ListField extends React.Component<FieldProps, DataMeta> {
   state = {
@@ -65,27 +93,58 @@ export class ListField extends React.Component<FieldProps, DataMeta> {
     });
   };
 
-  fieldOf(type: string, value: any) {
+  @dataChange
+  setKey(item: DataMeta, newKey: string) {
+    const { value, children = [] } = this.state;
+
+    item.key = newKey;
+
+    for (let oldKey in value)
+      if (!children.find(({ key }) => key === oldKey)) {
+        value[newKey] = value[oldKey];
+
+        delete value[oldKey];
+        break;
+      }
+  }
+
+  @dataChange
+  setValue(item: DataMeta, newValue: string) {
+    const { value } = this.state;
+
+    item.value = newValue;
+
+    value[item.key + ''] = newValue;
+  }
+
+  fieldOf(index: number, type: string, value: any) {
     switch (type) {
       case 'string':
         return (
           <input
             type="text"
             className="form-control"
-            value={value}
+            defaultValue={value}
             placeholder="Value"
+            // @ts-ignore
+            onBlur={this.setValue.bind(this, index)}
           />
         );
       case 'text':
         return (
           <textarea
             className="form-control"
-            value={value}
+            defaultValue={value}
             placeholder="Value"
+            // @ts-ignore
+            onBlur={this.setValue.bind(this, index)}
           ></textarea>
         );
       default:
-        return <ListField value={value} />;
+        return (
+          // @ts-ignore
+          <ListField value={value} onChange={this.setValue.bind(this, index)} />
+        );
     }
   }
 
@@ -102,23 +161,26 @@ export class ListField extends React.Component<FieldProps, DataMeta> {
 
     return this.wrapper(
       <>
-        {children.map(({ type, key, value }) => (
+        <li className="form-group">
+          <AddBar onSelect={this.addItem} />
+        </li>
+        {children.map(({ type, key, value }, index) => (
           <li className="input-group input-group-sm" key={key}>
             {field_type === 'object' && (
               <input
                 type="text"
                 className="form-control"
-                value={key}
+                // @ts-ignore
+                defaultValue={key}
                 required
                 placeholder="Key"
+                // @ts-ignore
+                onBlur={this.setKey.bind(this, index)}
               />
             )}
-            {this.fieldOf(type, value)}
+            {this.fieldOf(index, type, value)}
           </li>
         ))}
-        <li className="form-group">
-          <AddBar onSelect={this.addItem} />
-        </li>
       </>
     );
   }

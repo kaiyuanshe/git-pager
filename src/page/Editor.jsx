@@ -10,6 +10,7 @@ import { updateContent } from '../service';
 
 const File_Type = {
     MarkDown: ['md', 'markdown'],
+    JSON: ['json'],
     YAML: ['yml', 'yaml']
   },
   GitHub_Relative = /^https:\/\/github.com\/(?:[^/]+\/){2}(?:tree|blob|raw)\/[^/]+\//;
@@ -46,9 +47,9 @@ export default class Editor extends React.Component {
     return (
       type === 'dir' ||
       (type === 'file' &&
-        [...File_Type.MarkDown, ...File_Type.YAML].includes(
-          name.split('.').slice(-1)[0]
-        ))
+        Object.values(File_Type)
+          .flat()
+          .includes(name.split('.').slice(-1)[0]))
     );
   }
 
@@ -62,10 +63,11 @@ export default class Editor extends React.Component {
     this.URL = URL;
     this.SHA = SHA;
 
+    if (File_Type.JSON.includes(type))
+      return this.setState({ meta: JSON.parse(content) });
+
     if (File_Type.YAML.includes(type))
       return this.setState({ meta: YAML.parse(content) });
-
-    if (!File_Type.MarkDown.includes(type)) return;
 
     const meta = /^---[\r\n]([\s\S]*?)[\r\n]---/.exec(content);
 
@@ -107,6 +109,27 @@ export default class Editor extends React.Component {
     }
   });
 
+  getContent() {
+    const type = this.URL.split('.').slice(-1)[0],
+      {
+        state: { meta },
+        core
+      } = this;
+
+    if (File_Type.JSON.includes(type)) return JSON.stringify(meta);
+
+    if (File_Type.YAML.includes(type)) return YAML.stringify(meta);
+
+    if (File_Type.MarkDown.includes(type))
+      return !meta
+        ? core.raw
+        : `---
+${YAML.stringify(meta)}
+---
+
+${core.raw}`;
+  }
+
   submit = async event => {
     event.preventDefault();
 
@@ -134,7 +157,7 @@ export default class Editor extends React.Component {
       repository,
       pathName,
       message.value.trim(),
-      core.raw,
+      this.getContent(),
       this.SHA
     );
 
@@ -181,7 +204,12 @@ export default class Editor extends React.Component {
           {meta && (
             <div className="form-group">
               <label>Meta</label>
-              <ListField value={meta} />
+              <ListField
+                value={meta}
+                onChange={({ target: { value } }) =>
+                  this.setState({ meta: value })
+                }
+              />
             </div>
           )}
 
