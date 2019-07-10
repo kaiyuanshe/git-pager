@@ -87,7 +87,6 @@ export default abstract class CascadeSelect<
                 className="form-control"
                 id={IID}
                 list={LID}
-                // @ts-ignore
                 onChange={({ target: { value } }) =>
                   (value = value.trim()) && this.changeLevel(index, value)
                 }

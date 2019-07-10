@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { createRef } from 'react';
 
 import * as MarkdownIME from 'markdown-ime';
 import marked from 'marked';
@@ -13,7 +13,11 @@ type InputHandler = (event: React.FormEvent) => void;
 
 export default class MarkdownEditor extends React.Component<EditorProps> {
   convertor: TurnDown;
-  root: any;
+  private contentEditable = createRef<HTMLDivElement>();
+
+  get root() {
+    return this.contentEditable.current;
+  }
 
   state = {
     count: 0
@@ -33,61 +37,62 @@ export default class MarkdownEditor extends React.Component<EditorProps> {
   }
 
   countText = debounce(() => {
-    // @ts-ignore
-    this.setState({ count: this.root.textContent.trim().length });
+    var count = 0;
+
+    if (this.root) count = (this.root.textContent || '').trim().length;
+
+    this.setState({ count });
   });
 
   set raw(code) {
-    // @ts-ignore
+    if (!this.root) return;
+
     this.root.innerHTML = marked(code);
 
     this.countText();
 
-    // @ts-ignore
     this.root.dispatchEvent(
       new CustomEvent('input', {
         bubbles: true,
-        // @ts-ignore
         detail: this.root.textContent
       })
     );
   }
 
   get raw() {
-    return this.convertor.turndown(this.root);
+    return this.root ? this.convertor.turndown(this.root) : '';
   }
 
   handleFiles = async (event: React.DragEvent | React.ClipboardEvent) => {
     // @ts-ignore
-    var { files } = event.dataTransfer || event.clipboardData;
+    const { files } = event.dataTransfer || event.clipboardData;
 
     if (!files[0]) return;
 
     event.preventDefault();
 
-    files = Array.from(files, (file: File) => {
-      const type = file.type.split('/')[0];
-      // @ts-ignore
-      file = URL.createObjectURL(file);
+    const list = Array.from(files, (file: File) => {
+      const type = file.type.split('/')[0],
+        src = URL.createObjectURL(file);
 
       switch (type) {
         case 'image':
-          return parseDOM(`<img src=${file}>`);
+          return parseDOM(`<img src=${src}>`);
         case 'audio':
-          return parseDOM(`<audio src=${file}></audio>`);
+          return parseDOM(`<audio src=${src}></audio>`);
         case 'video':
-          return parseDOM(`<video src=${file}></video>`);
+          return parseDOM(`<video src=${src}></video>`);
       }
     });
 
-    insertToCursor(...files.flat());
+    insertToCursor(...list.flat());
   };
 
   render() {
     return (
       <div
         contentEditable
-        ref={node => (this.root = node)}
+        ref={this.contentEditable}
         className={`form-control ${STYLE.editor}`}
         style={{ height: 'auto' }}
         data-count={this.state.count}

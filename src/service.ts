@@ -1,4 +1,8 @@
-import { parseURLData, encodeBase64 } from './utility';
+import { parseURLData, encodeBase64, readAs } from './utility';
+
+interface RequestOptions extends RequestInit {
+  body?: any & RequestInit['body'];
+}
 
 const { token } = parseURLData();
 
@@ -11,7 +15,10 @@ const { token } = parseURLData();
  *
  * @throw {URIError}
  */
-export async function request(path, { body, ...options } = {}) {
+export async function request(
+  path: string,
+  { body, ...options }: RequestOptions = {}
+) {
   if (body && body instanceof Object) {
     body = JSON.stringify(body);
 
@@ -51,7 +58,7 @@ export function getCurrentUser() {
  *
  * @return {Promise<Object|Object[]>}
  */
-export function getContents(repository, path = '') {
+export function getContents(repository: string, path = '') {
   return request(`/repos/${repository}/contents/${path}`);
 }
 
@@ -64,12 +71,22 @@ export function getContents(repository, path = '') {
  *
  * @return {Promise<Object>}
  */
-export async function updateContent(repository, path, message, data, sha) {
+export async function updateContent(
+  repository: string,
+  path: string,
+  message: string,
+  data: string | Blob,
+  sha: string
+) {
   return request(`/repos/${repository}/contents/${path}`, {
     method: 'PUT',
     body: {
       message,
-      content: encodeBase64(data),
+      content: encodeBase64(
+        data instanceof Blob
+          ? ((await readAs(data, 'BinaryString')) as string)
+          : data
+      ),
       sha
     }
   });

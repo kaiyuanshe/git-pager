@@ -1,15 +1,7 @@
-/**
- * @param {*} value
- *
- * @return {Boolean}
- */
-export function isEmpty(value) {
+export function isEmpty(value: any) {
   return !(value != null) || (typeof value === 'number' && isNaN(value));
 }
 
-/**
- * @return {String}
- */
 export function uniqueID() {
   return parseInt((Math.random() + '').slice(2)).toString(36);
 }
@@ -22,14 +14,15 @@ export function uniqueID() {
  *
  * @see https://web-cell.dev/DOM-Renderer/function/index.html#static-function-debounce
  */
-export function debounce(origin, interval = 0.25) {
-  var timer;
+export function debounce(origin: (...data: any) => any, interval = 0.25) {
+  var timer: any;
 
-  return function() {
+  return function(this: any, ...parameter: any[]) {
     clearTimeout(timer);
 
     timer = setTimeout(
-      origin.bind.apply(origin, [].concat.apply([this], arguments)),
+      // @ts-ignore
+      origin.bind.apply(origin, [].concat.apply([this], parameter)),
       interval * 1000
     );
   };
@@ -37,13 +30,12 @@ export function debounce(origin, interval = 0.25) {
 
 const sandbox = document.createElement('template'),
   fragment = document.createDocumentFragment();
-
 /**
  * @param {String} HTML
  *
  * @return {Node[]}
  */
-export function parseDOM(HTML) {
+export function parseDOM(HTML: string) {
   sandbox.innerHTML = HTML;
 
   return Array.from(sandbox.content.childNodes).map(
@@ -51,16 +43,12 @@ export function parseDOM(HTML) {
   );
 }
 
-/**
- * @param {...Node} nodes
- */
-export function insertToCursor(...nodes) {
+export function insertToCursor(...nodes: Node[]) {
   fragment.append(...nodes);
 
-  window
-    .getSelection()
-    .getRangeAt(0)
-    .insertNode(fragment);
+  const selection = window.getSelection();
+
+  if (selection) selection.getRangeAt(0).insertNode(fragment);
 }
 
 /**
@@ -70,17 +58,12 @@ export function insertToCursor(...nodes) {
  *
  * @see https://web-cell.dev/WebCell/function/index.html#static-function-isXDomain
  */
-export function isXDomain(URI) {
+export function isXDomain(URI: string) {
   return new URL(URI, document.baseURI).origin !== window.location.origin;
 }
 
-/**
- * @param {String} [raw=window.location.search]
- *
- * @return {Object}
- */
 export function parseURLData(raw = window.location.search) {
-  const data = {},
+  const data: any = {},
     parameter = (/(?:\?|#)?(\S+)/.exec(raw) || '')[1];
 
   for (let [key, value] of new URLSearchParams(parameter)) {
@@ -108,10 +91,10 @@ export function parseURLData(raw = window.location.search) {
  *
  * @see https://web-cell.dev/WebCell/function/index.html#static-function-encodeBase64
  */
-export function encodeBase64(raw) {
+export function encodeBase64(raw: string) {
   return window.btoa(
     encodeURIComponent(raw).replace(/%([0-9A-F]{2})/g, (_, p1) =>
-      String.fromCharCode('0x' + p1)
+      String.fromCharCode(+('0x' + p1))
     )
   );
 }
@@ -124,7 +107,8 @@ const DataURI = /^data:(.+?\/(.+?))?(;base64)?,([\s\S]+)/;
  *
  * @see https://web-cell.dev/WebCell/function/index.html#static-function-blobFrom
  */
-export function blobFrom(URI) {
+export function blobFrom(URI: string) {
+  // @ts-ignore
   var [_, type, __, base64, data] = DataURI.exec(URI) || [];
 
   data = base64 ? window.atob(data) : data;
@@ -139,7 +123,7 @@ export function blobFrom(URI) {
 }
 
 /**
- * @param {Blob}   file
+ * @param {Blob}   data
  * @param {String} [type='DataURL']   - https://developer.mozilla.org/en-US/docs/Web/API/FileReader#Methods
  * @param {String} [encoding='UTF-8'] - https://developer.mozilla.org/en-US/docs/Web/API/FileReader/readAsText#Parameters
  *
@@ -147,7 +131,11 @@ export function blobFrom(URI) {
  *
  * @see https://web-cell.dev/WebCell/function/index.html#static-function-readAs
  */
-export function readAs(file, type = 'DataURL', encoding = 'UTF-8') {
+export function readAs(
+  data: Blob,
+  type = 'DataURL',
+  encoding = 'UTF-8'
+): Promise<String | ArrayBuffer | null> {
   const reader = new FileReader();
 
   return new Promise((resolve, reject) => {
@@ -155,6 +143,17 @@ export function readAs(file, type = 'DataURL', encoding = 'UTF-8') {
 
     reader.onerror = reject;
 
-    reader[`readAs${type}`](file, encoding);
+    switch (type) {
+      case 'Text':
+        return reader.readAsText(data, encoding);
+      case 'DataURL':
+        return reader.readAsDataURL(data);
+      case 'BinaryString':
+        return reader.readAsBinaryString(data);
+      case 'ArrayBuffer':
+        return reader.readAsArrayBuffer(data);
+    }
+
+    throw TypeError('Unsupported type: ' + type);
   });
 }

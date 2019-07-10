@@ -16,16 +16,19 @@ function dataChange(
 ) {
   const method = target[propertyKey];
   // @ts-ignore
-  descriptor.value = function(index: number, { target: { value: data } }) {
-    // @ts-ignore
+  descriptor.value = function(
+    this: React.Component<FieldProps, DataMeta>,
+    index: number,
+    { target: { value: data } }: any
+  ) {
     const { children = [] } = this.state;
 
     const item = children[index];
 
     if (!item) return;
-    // @ts-ignore
+
     method.call(this, item, data);
-    // @ts-ignore
+
     const { onChange } = this.props;
 
     if (onChange instanceof Function)

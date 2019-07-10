@@ -20,12 +20,11 @@ export default class extends TurnDown {
     this.use(gfm as TurnDownGFM)
       .addRule('non_url', {
         filter: node =>
-          // @ts-ignore
           ['a', 'area'].includes(node.nodeName.toLowerCase()) &&
-          // @ts-ignore
-          Empty_HREF.test(node.getAttribute('href')),
-        // @ts-ignore
-        replacement: (content, node) => content.trim() || node.title.trim()
+          Empty_HREF.test(node.getAttribute('href') || ''),
+        replacement: (content, node) =>
+          content.trim() ||
+          (node instanceof HTMLElement ? node.title.trim() : '')
       })
       .addRule('asset_code', {
         filter: ['style', 'script'],
