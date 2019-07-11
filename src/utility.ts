@@ -122,6 +122,10 @@ export function blobFrom(URI: string) {
   return new Blob([aBuffer], { type });
 }
 
+export async function blobOf(URI: string) {
+  return (await fetch(URI)).blob();
+}
+
 /**
  * @param {Blob}   data
  * @param {String} [type='DataURL']   - https://developer.mozilla.org/en-US/docs/Web/API/FileReader#Methods

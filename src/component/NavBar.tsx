@@ -8,12 +8,12 @@ interface MenuItem {
   href: string;
 }
 
-interface NavBarProps {
+export interface NavBarProps {
   title: string;
   menu: MenuItem[];
-  expand: string;
-  theme: string;
-  background: string;
+  expand?: string;
+  theme?: string;
+  background?: string;
   rightSlot?: React.Component | React.ReactFragment;
 }
 

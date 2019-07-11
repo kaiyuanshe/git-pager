@@ -1,11 +1,11 @@
 import React from 'react';
 import { uniqueID, debounce } from '../utility';
 
-interface SelectProps {
+export interface CascadeProps {
   required: boolean;
 }
 
-interface SelectState {
+export interface CascadeState {
   path?: string[];
   list: any[][];
 }
@@ -16,11 +16,11 @@ interface LevelItem {
 }
 
 export default abstract class CascadeSelect<
-  P,
-  S = null
-> extends React.Component<SelectProps | P, SelectState | S> {
+  P extends CascadeProps,
+  S extends CascadeState
+> extends React.Component<P, S> {
   UID = uniqueID();
-
+  // @ts-ignore
   state = {
     path: [],
     list: []

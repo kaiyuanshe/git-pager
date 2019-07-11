@@ -76,7 +76,7 @@ export async function updateContent(
   path: string,
   message: string,
   data: string | Blob,
-  sha: string
+  sha?: string
 ) {
   return request(`/repos/${repository}/contents/${path}`, {
     method: 'PUT',

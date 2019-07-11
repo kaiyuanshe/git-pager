@@ -1,21 +1,28 @@
 import React from 'react';
-import CascadeSelect from './CascadeSelect';
+import CascadeSelect, { CascadeProps, CascadeState } from './CascadeSelect';
 
 import { blobFrom } from '../utility';
 import { getContents } from '../service';
 
-interface GitContent {
+export interface GitContent {
   type: string;
   name: string;
 }
 
-interface SelectProps {
+interface SelectProps extends CascadeProps {
   repository: string;
   filter?: (content: GitContent) => boolean;
-  onLoad?: (URL: string, data: Blob, SHA: string) => void;
+  onLoad?: (URL: string, SHA?: string, data?: Blob) => void;
 }
 
-export default class PathSelect extends CascadeSelect<SelectProps> {
+interface SelectState extends CascadeState {
+  html_url: string;
+}
+
+export default class PathSelect extends CascadeSelect<
+  SelectProps,
+  SelectState
+> {
   filter: (name: GitContent) => boolean;
 
   constructor(props: SelectProps) {
@@ -55,14 +62,16 @@ export default class PathSelect extends CascadeSelect<SelectProps> {
 
       this.setState({ html_url });
 
-      onLoad(html_url, sha, blobFrom(`data:;base64,${content}`));
+      if (onLoad instanceof Function)
+        onLoad(html_url, sha, blobFrom(`data:;base64,${content}`));
     } catch (error) {
       if (
         error instanceof URIError &&
         // @ts-ignore
         error.response.status === 404 &&
         // @ts-ignore
-        name.includes('.')
+        name.includes('.') &&
+        onLoad instanceof Function
       )
         onLoad(`https://github.com/${repository}/blob/master/${pathName}`);
     }
