@@ -1,10 +1,10 @@
-import { parseURLData, encodeBase64, readAs } from './utility';
+import { parseCookie, encodeBase64, readAs } from './utility';
 
 interface RequestOptions extends RequestInit {
   body?: any & RequestInit['body'];
 }
 
-const { token } = parseURLData();
+const { token } = parseCookie();
 
 /**
  * @param {String}  path

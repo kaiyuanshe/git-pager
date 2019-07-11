@@ -1,16 +1,30 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# Git Pager
 
-## Available Scripts
+[![NPM Dependency](https://david-dm.org/kaiyuanshe/git-pager.svg)](https://david-dm.org/kaiyuanshe/git-pager)
 
-In the project directory, you can run:
+## 技术架构
 
-### `npm start`
+- 前端技术栈：[`npm init react-app . --typescript`](https://github.com/facebook/create-react-app)
 
-Runs the app in the development mode.<br>
-Open http://localhost:3000/?repository=kaiyuanshe/Wiki&token=your_access_token to view it in the browser.
+- 后端技术栈：
 
-The page will reload if you make edits.<br>
-You will also see any lint errors in the console.
+  - [Koa](http://koa.bootcss.com/)
+
+  - [LeanCloud](https://leancloud.cn/)
+
+## 本地开发
+
+### 单独启动前端开发环境
+
+1. 执行命令 `npm run front`
+
+2. 浏览器访问 http://localhost:3000/?repository=your-repo&token=your-token
+
+### 前端生产环境 + 后端调试环境
+
+1. 执行命令 `lean up`（需装好 [LeanCloud 命令行工具](https://leancloud.cn/docs/leanengine_cli.html)）
+
+2. 浏览器访问 http://localhost:3000/?repository=your-repo
 
 ### `npm test`
 

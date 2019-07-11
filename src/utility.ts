@@ -84,6 +84,16 @@ export function parseURLData(raw = window.location.search) {
   return data;
 }
 
+export function parseCookie(raw = document.cookie) {
+  return Object.fromEntries(
+    raw.split(/;\s*/).map(item => {
+      const data = item.split('=');
+
+      return [data.shift(), data.join('=')];
+    })
+  );
+}
+
 /**
  * @param {String} raw - Binary data
  *

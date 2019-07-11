@@ -1,0 +1,11 @@
+.git/
+.DS_Store
+.avoscloud/
+.leancloud/
+node_modules/
+public/
+src/
+tsconfig.json
+yarn.lock
+README.md
+LICENSE

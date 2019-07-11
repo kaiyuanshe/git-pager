@@ -1,9 +1,29 @@
 {
   "name": "git-pager",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "private": true,
   "author": "shiy2008@gmail.com",
+  "engines": {
+    "node": "^8.0.0"
+  },
   "dependencies": {
+    "classnames": "^2.2.6",
+    "hostname-is-private": "^2.0.8",
+    "koa": "^2.7.0",
+    "koa-logger": "^3.2.0",
+    "koa-mount": "^4.0.0",
+    "koa-route": "^3.2.0",
+    "koa-static": "^5.0.0",
+    "markdown-ime": "^1.0.3",
+    "marked": "^0.7.0",
+    "node-fetch": "^2.6.0",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "turndown": "^5.0.3",
+    "turndown-plugin-gfm": "^1.0.2",
+    "yaml": "^1.6.0"
+  },
+  "devDependencies": {
     "@types/classnames": "^2.2.9",
     "@types/jest": "24.0.15",
     "@types/marked": "^0.6.5",
@@ -12,26 +32,19 @@
     "@types/react-dom": "16.8.4",
     "@types/turndown": "^5.0.0",
     "@types/yaml": "^1.0.2",
-    "classnames": "^2.2.6",
-    "markdown-ime": "^1.0.3",
-    "marked": "^0.7.0",
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6",
-    "react-scripts": "3.0.1",
-    "turndown": "^5.0.3",
-    "turndown-plugin-gfm": "^1.0.2",
-    "typescript": "3.5.2",
-    "yaml": "^1.6.0"
-  },
-  "devDependencies": {
     "husky": "^3.0.0",
-    "prettier": "^1.18.2"
+    "prettier": "^1.18.2",
+    "react-scripts": "3.0.1",
+    "typescript": "3.5.2"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "front": "react-scripts start",
     "format": "prettier --write \"{,!(node_modules|.git|build)/**/}*.{html,md,css,less,js,json,ts,jsx,tsx}\"",
     "build": "npm run format  &&  react-scripts build",
+    "start": "node ./server ./build LEANCLOUD_APP_PORT",
+    "dev": "npm run build  &&  node --inspect ./server ./build LEANCLOUD_APP_PORT",
     "test": "react-scripts test",
+    "deploy": "npm run build  &&  lean deploy",
     "eject": "react-scripts eject"
   },
   "husky": {

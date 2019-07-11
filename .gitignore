@@ -12,6 +12,7 @@ yarn.lock
 
 # production
 /build
+.leancloud
 
 # misc
 .DS_Store
