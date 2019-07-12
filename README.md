@@ -26,6 +26,14 @@
 
 2. 浏览器访问 http://localhost:3000/?repository=your-repo
 
+## 远程部署
+
+```shell
+npm run deploy
+```
+
+## 其它命令
+
 ### `npm test`
 
 Launches the test runner in the interactive watch mode.<br>

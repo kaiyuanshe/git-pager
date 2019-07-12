@@ -8,7 +8,7 @@ const isPrivateHost = promisify(require('hostname-is-private').isPrivate),
 const HTML_Type = ['', '.htm', '.html'];
 
 exports.checkAuth = client_id => async (context, next) => {
-  const { hostname, URL } = context,
+  const { URL } = context,
     token = context.query.token || context.cookies.get('token');
 
   if (token || !HTML_Type.includes(extname(URL.pathname))) return next();
@@ -18,12 +18,12 @@ exports.checkAuth = client_id => async (context, next) => {
       new URLSearchParams({
         client_id,
         scope: 'user repo',
-        state: (await isPrivateHost(hostname)) ? URL : ''
+        state: URL
       })
   );
 };
 
-exports.signIn = (client_id, client_secret) => async context => {
+exports.signIn = (client_id, client_secret, domains = []) => async context => {
   const { code, state } = context.query;
 
   const { error, access_token } = await (await fetch(
@@ -48,7 +48,16 @@ exports.signIn = (client_id, client_secret) => async context => {
 
   if (state)
     try {
-      return context.redirect(new URL(state));
+      const URI = new URL(state);
+
+      if (
+        domains.includes(URI.hostname) ||
+        (await isPrivateHost(URI.hostname))
+      ) {
+        URI.searchParams.set('token', access_token);
+
+        return context.redirect(URI);
+      }
     } catch (error) {}
 
   context.redirect('/');
