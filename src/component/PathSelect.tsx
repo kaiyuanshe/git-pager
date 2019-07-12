@@ -12,7 +12,7 @@ export interface GitContent {
 interface SelectProps extends CascadeProps {
   repository: string;
   filter?: (content: GitContent) => boolean;
-  onLoad?: (URL: string, SHA?: string, data?: Blob) => void;
+  onLoad?: (URL: string, data?: Blob) => void;
 }
 
 interface SelectState extends CascadeState {
@@ -56,14 +56,14 @@ export default class PathSelect extends CascadeSelect<
           list: contents.filter(this.filter).map(({ name }) => name)
         };
 
-      const { type, content, html_url, sha } = contents;
+      const { type, content, html_url } = contents;
 
       if (type !== 'file') return;
 
       this.setState({ html_url });
 
       if (onLoad instanceof Function)
-        onLoad(html_url, sha, blobFrom(`data:;base64,${content}`));
+        onLoad(html_url, blobFrom(`data:;base64,${content}`));
     } catch (error) {
       if (
         error instanceof URIError &&

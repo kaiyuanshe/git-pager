@@ -1,55 +1,15 @@
-import { parseCookie, encodeBase64, readAs } from './utility';
+import { parseCookie, parseURLData, encodeBase64, readAs } from './utility';
+import Octokit from '@octokit/rest';
 
-interface RequestOptions extends RequestInit {
-  body?: any & RequestInit['body'];
-}
+const { token }: any = { ...parseCookie(), ...parseURLData() };
 
-const { token } = parseCookie();
-
-/**
- * @param {String}  path
- * @param {Object}  [options={}] - https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch#Parameters
- * @param {?Object} options.body
- *
- * @return {Promise<Object|Object[]>}
- *
- * @throw {URIError}
- */
-export async function request(
-  path: string,
-  { body, ...options }: RequestOptions = {}
-) {
-  if (body && body instanceof Object) {
-    body = JSON.stringify(body);
-
-    options.headers = {
-      'Content-Type': 'application/json',
-      ...options.headers
-    };
-  }
-
-  const response = await fetch('https://api.github.com' + path, {
-    headers: {
-      Authorization: 'token ' + token,
-      ...options.headers
-    },
-    body,
-    ...options
-  });
-
-  const data = await response.json();
-
-  if (response.status > 299)
-    throw Object.assign(new URIError(data.message), { data, response });
-
-  return data;
-}
+const github = new Octokit({ auth: token });
 
 /**
  * @return {Promise<Object>}
  */
-export function getCurrentUser() {
-  return request('/user');
+export async function getCurrentUser() {
+  return (await github.users.getAuthenticated()).data;
 }
 
 /**
@@ -58,8 +18,10 @@ export function getCurrentUser() {
  *
  * @return {Promise<Object|Object[]>}
  */
-export function getContents(repository: string, path = '') {
-  return request(`/repos/${repository}/contents/${path}`);
+export async function getContents(repository: string, path = '') {
+  const [owner, repo] = repository.split('/');
+
+  return (await github.repos.getContents({ owner, repo, path })).data;
 }
 
 /**
@@ -67,7 +29,6 @@ export function getContents(repository: string, path = '') {
  * @param {String}      path
  * @param {String}      message
  * @param {String|Blob} data
- * @param {?String}     sha
  *
  * @return {Promise<Object>}
  */
@@ -75,19 +36,24 @@ export async function updateContent(
   repository: string,
   path: string,
   message: string,
-  data: string | Blob,
-  sha?: string
+  data: string | Blob
 ) {
-  return request(`/repos/${repository}/contents/${path}`, {
-    method: 'PUT',
-    body: {
-      message,
-      content: encodeBase64(
-        data instanceof Blob
-          ? ((await readAs(data, 'BinaryString')) as string)
-          : data
-      ),
-      sha
-    }
-  });
+  const [owner, repo] = repository.split('/');
+
+  try {
+    var sha = (await getContents(repository, path)).sha;
+  } catch {}
+
+  return (await github.repos.createOrUpdateFile({
+    owner,
+    repo,
+    path,
+    message,
+    content: encodeBase64(
+      data instanceof Blob
+        ? ((await readAs(data, 'BinaryString')) as string)
+        : data
+    ),
+    sha
+  })).data;
 }

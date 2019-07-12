@@ -6,6 +6,32 @@ export function uniqueID() {
   return parseInt((Math.random() + '').slice(2)).toString(36);
 }
 
+const unitISO = ['Y', 'M', 'D', 'H', 'm', 's', 'ms'];
+const patternISO = /[YMDHms]+/g;
+
+type TempDate = { [key: string]: number };
+
+export function formatDate(
+  time: number | string | Date = Date.now(),
+  template = 'YYYY-MM-DD HH:mm:ss'
+) {
+  time = new Date(time);
+
+  const temp: TempDate = new Date(+time - time.getTimezoneOffset() * 60 * 1000)
+    .toISOString()
+    .split(/[^\d]/)
+    .reduce((temp, section, index) => {
+      // @ts-ignore
+      temp[unitISO[index]] = +section;
+
+      return temp;
+    }, {});
+
+  return template.replace(patternISO, section =>
+    (temp[section[0]] + '').padStart(section.length, '0')
+  );
+}
+
 /**
  * @param {Function} origin
  * @param {Number}   [interval=0.25] - Seconds

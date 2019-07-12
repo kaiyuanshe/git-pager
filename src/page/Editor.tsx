@@ -5,7 +5,7 @@ import { ListField } from '../component/JSONEditor';
 import MarkdownEditor from '../component/MarkdownEditor';
 
 import YAML from 'yaml';
-import { readAs, debounce, blobOf, uniqueID } from '../utility';
+import { readAs, debounce, blobOf, uniqueID, formatDate } from '../utility';
 import { updateContent } from '../service';
 
 const File_Type = {
@@ -52,7 +52,6 @@ export default class Editor extends React.Component<{ repository: string }> {
   }
 
   URL = '';
-  SHA = '';
 
   state = {
     meta: null
@@ -68,15 +67,17 @@ export default class Editor extends React.Component<{ repository: string }> {
     );
   }
 
-  setContent = async (URL: string, SHA?: string, data?: Blob) => {
-    if (!(data instanceof Blob)) return;
+  setContent = async (URL: string, data?: Blob) => {
+    this.URL = URL;
 
     const type = URL.split('.').slice(-1)[0];
 
-    var content = (await readAs(data, 'Text')) as string;
+    if (File_Type.MarkDown.includes(type))
+      this.setState({ meta: { title: '', date: formatDate() } });
 
-    this.URL = URL;
-    this.SHA = SHA || '';
+    if (!(data instanceof Blob)) return;
+
+    var content = (await readAs(data, 'Text')) as string;
 
     if (File_Type.JSON.includes(type))
       return this.setState({ meta: JSON.parse(content) });
@@ -86,8 +87,7 @@ export default class Editor extends React.Component<{ repository: string }> {
 
     const meta = /^---[\r\n]([\s\S]*?)[\r\n]---/.exec(content);
 
-    if (!meta) this.setState({ meta: { title: '' } });
-    else {
+    if (meta) {
       content = content.slice(meta[0].length);
 
       meta[1] = meta[1].trim();
@@ -185,8 +185,7 @@ ${core.raw}`;
       repository,
       pathName,
       message.value.trim(),
-      this.getContent() as string,
-      this.SHA
+      this.getContent() as string
     );
 
     window.alert('Submitted');
