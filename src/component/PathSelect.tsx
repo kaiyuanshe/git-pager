@@ -85,7 +85,12 @@ export default class PathSelect extends CascadeSelect<
       <>
         {super.render()}
         {html_url && (
-          <a className="d-block pt-2" target="_blank" href={html_url}>
+          <a
+            className="d-block pt-2"
+            target="_blank"
+            href={html_url}
+            rel="noopener noreferrer"
+          >
             <code>{html_url}</code>
           </a>
         )}

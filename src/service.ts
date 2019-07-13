@@ -1,4 +1,4 @@
-import { parseCookie, parseURLData, encodeBase64, readAs } from './utility';
+import { parseCookie, parseURLData, encodeBase64 } from './utility';
 import Octokit from '@octokit/rest';
 
 const { token }: any = { ...parseCookie(), ...parseURLData() };
@@ -49,11 +49,7 @@ export async function updateContent(
     repo,
     path,
     message,
-    content: encodeBase64(
-      data instanceof Blob
-        ? ((await readAs(data, 'BinaryString')) as string)
-        : data
-    ),
+    content: await encodeBase64(data),
     sha
   })).data;
 }

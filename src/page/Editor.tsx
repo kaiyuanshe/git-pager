@@ -6,37 +6,19 @@ import MarkdownEditor from '../component/MarkdownEditor';
 
 import YAML from 'yaml';
 import { readAs, debounce, blobOf, uniqueID, formatDate } from '../utility';
-import { updateContent } from '../service';
+import { getCurrentUser, updateContent } from '../service';
 
-const File_Type = {
-    MarkDown: ['md', 'markdown'],
-    JSON: ['json'],
-    YAML: ['yml', 'yaml']
-  },
-  GitHub_Relative = /^https:\/\/github.com\/(?:[^/]+\/){2}(?:tree|blob|raw)\/[^/]+\//;
+export const pageURL = window.location.href.split('?')[0];
 
-type HyperLink = HTMLAnchorElement & HTMLImageElement;
+export const fileType = {
+  MarkDown: ['md', 'markdown'],
+  JSON: ['json'],
+  YAML: ['yml', 'yaml']
+};
 
-const pageURL = window.location.href.split('?')[0],
-  rules = {
-    relative_URL: {
-      filter: (node: HyperLink) =>
-        ['a', 'area', 'img'].includes(node.nodeName.toLowerCase()) &&
-        GitHub_Relative.test(node.href || node.src),
-      replacement(
-        _: string,
-        { href, src, title, textContent, alt }: HyperLink
-      ) {
-        const path = (href || src).replace(GitHub_Relative, '');
+export const postMeta = /^---[\r\n]([\s\S]*?)[\r\n]---/;
 
-        if ((title = title.trim())) title = ` '${title}'`;
-
-        return src
-          ? `![${alt}](${path}${title})`
-          : `[${(textContent || '').trim()}](${path}${title})`;
-      }
-    }
-  };
+export type HyperLink = HTMLAnchorElement & HTMLImageElement;
 
 export default class Editor extends React.Component<{ repository: string }> {
   private Selector = createRef<PathSelect>();
@@ -61,10 +43,18 @@ export default class Editor extends React.Component<{ repository: string }> {
     return (
       type === 'dir' ||
       (type === 'file' &&
-        Object.values(File_Type)
+        Object.values(fileType)
           .flat()
           .includes(name.split('.').slice(-1)[0]))
     );
+  }
+
+  async setDefaultMeta() {
+    const { login } = await getCurrentUser();
+
+    this.setState({
+      meta: { title: '', date: formatDate(), authors: [login] }
+    });
   }
 
   setContent = async (URL: string, data?: Blob) => {
@@ -72,22 +62,24 @@ export default class Editor extends React.Component<{ repository: string }> {
 
     const type = URL.split('.').slice(-1)[0];
 
-    if (File_Type.MarkDown.includes(type))
-      this.setState({ meta: { title: '', date: formatDate() } });
+    if (!(data instanceof Blob)) {
+      if (fileType.MarkDown.includes(type)) await this.setDefaultMeta();
 
-    if (!(data instanceof Blob)) return;
+      return;
+    }
 
     var content = (await readAs(data, 'Text')) as string;
 
-    if (File_Type.JSON.includes(type))
+    if (fileType.JSON.includes(type))
       return this.setState({ meta: JSON.parse(content) });
 
-    if (File_Type.YAML.includes(type))
+    if (fileType.YAML.includes(type))
       return this.setState({ meta: YAML.parse(content) });
 
-    const meta = /^---[\r\n]([\s\S]*?)[\r\n]---/.exec(content);
+    const meta = postMeta.exec(content);
 
-    if (meta) {
+    if (!meta) await this.setDefaultMeta();
+    else {
       content = content.slice(meta[0].length);
 
       meta[1] = meta[1].trim();
@@ -137,18 +129,21 @@ export default class Editor extends React.Component<{ repository: string }> {
         core
       } = this;
 
-    if (File_Type.JSON.includes(type)) return JSON.stringify(meta);
+    if (fileType.JSON.includes(type)) return JSON.stringify(meta);
 
-    if (File_Type.YAML.includes(type)) return YAML.stringify(meta);
+    if (fileType.YAML.includes(type)) return YAML.stringify(meta);
 
-    if (File_Type.MarkDown.includes(type) && core)
-      return !meta
-        ? core.raw
-        : `---
+    if (fileType.MarkDown.includes(type) && core) {
+      if (!meta) return core.raw;
+      // @ts-ignore
+      meta.updated = formatDate();
+
+      return `---
 ${YAML.stringify(meta)}
 ---
 
 ${core.raw}`;
+    }
   }
 
   submit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -157,7 +152,7 @@ ${core.raw}`;
     const { repository } = this.props,
       {
         // @ts-ignore
-        selector: { path, pathName },
+        selector: { pathName },
         core
       } = this,
       // @ts-ignore
@@ -173,12 +168,21 @@ ${core.raw}`;
     for (let file of media) {
       const blob = await blobOf(file.src);
 
-      await updateContent(
+      const filePath = pathName.replace(
+        /\.\w+$/,
+        `/${uniqueID()}.${blob.type.split('/')[1]}`
+      );
+
+      const {
+        content: { download_url }
+      }: any = await updateContent(
         repository,
-        `${path}/${uniqueID()}.${blob.type.split('/')[1]}`,
+        filePath,
         '[Upload] from Git-Pager',
         blob
       );
+
+      file.src = download_url;
     }
 
     await updateContent(
@@ -242,7 +246,7 @@ ${core.raw}`;
 
           <div className="form-group" onInput={this.fixURL}>
             <label>Content</label>
-            <MarkdownEditor ref={this.Core} rules={rules} />
+            <MarkdownEditor ref={this.Core} />
           </div>
         </form>
       </main>

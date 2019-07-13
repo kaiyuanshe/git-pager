@@ -8,7 +8,7 @@ import { debounce, parseDOM, insertToCursor } from '../../utility';
 
 import STYLE from './index.module.css';
 
-type EditorProps = { rules: any };
+type EditorProps = { rules?: any };
 type InputHandler = (event: React.FormEvent) => void;
 
 export default class MarkdownEditor extends React.Component<EditorProps> {
@@ -83,9 +83,10 @@ export default class MarkdownEditor extends React.Component<EditorProps> {
         case 'video':
           return parseDOM(`<video src=${src}></video>`);
       }
+      return '';
     });
 
-    insertToCursor(...list.flat());
+    insertToCursor(...list.filter(Boolean).flat());
   };
 
   render() {

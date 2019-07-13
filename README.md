@@ -1,6 +1,7 @@
 # Git Pager
 
 [![NPM Dependency](https://david-dm.org/kaiyuanshe/git-pager.svg)](https://david-dm.org/kaiyuanshe/git-pager)
+[![Build Status](https://travis-ci.com/kaiyuanshe/git-pager.svg?branch=master)](https://travis-ci.com/kaiyuanshe/git-pager)
 
 ## 技术架构
 

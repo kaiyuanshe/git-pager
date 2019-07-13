@@ -18,9 +18,12 @@ LC.init({
   masterKey: process.env.LEANCLOUD_APP_MASTER_KEY
 });
 
+server.proxy = true;
+
 server
   .use(Logger())
   .use(LC.koa2())
+  .use(LC.Cloud.HttpsRedirect({ framework: 'koa2' }))
   .use(mount(controller))
   .use(Static(root));
 

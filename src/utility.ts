@@ -64,9 +64,10 @@ const sandbox = document.createElement('template'),
 export function parseDOM(HTML: string) {
   sandbox.innerHTML = HTML;
 
-  return Array.from(sandbox.content.childNodes).map(
-    node => (node.remove(), node)
-  );
+  return Array.from(sandbox.content.childNodes).map(node => {
+    node.remove();
+    return node;
+  });
 }
 
 export function insertToCursor(...nodes: Node[]) {
@@ -120,21 +121,6 @@ export function parseCookie(raw = document.cookie) {
   );
 }
 
-/**
- * @param {String} raw - Binary data
- *
- * @return {String} Base64 encoded data
- *
- * @see https://web-cell.dev/WebCell/function/index.html#static-function-encodeBase64
- */
-export function encodeBase64(raw: string) {
-  return window.btoa(
-    encodeURIComponent(raw).replace(/%([0-9A-F]{2})/g, (_, p1) =>
-      String.fromCharCode(+('0x' + p1))
-    )
-  );
-}
-
 const DataURI = /^data:(.+?\/(.+?))?(;base64)?,([\s\S]+)/;
 /**
  * @param {String} URI - Data URI
@@ -145,7 +131,7 @@ const DataURI = /^data:(.+?\/(.+?))?(;base64)?,([\s\S]+)/;
  */
 export function blobFrom(URI: string) {
   // @ts-ignore
-  var [_, type, __, base64, data] = DataURI.exec(URI) || [];
+  var [_, type, __, base64, data] = DataURI.exec(URI) || []; // eslint-disable-line
 
   data = base64 ? window.atob(data) : data;
 
@@ -196,4 +182,21 @@ export function readAs(
 
     throw TypeError('Unsupported type: ' + type);
   });
+}
+
+/**
+ * @param {String|Blob} raw - Binary data
+ *
+ * @return {String} Base64 encoded data
+ *
+ * @see https://web-cell.dev/WebCell/function/index.html#static-function-encodeBase64
+ */
+export async function encodeBase64(raw: string | Blob) {
+  return raw instanceof Blob
+    ? (DataURI.exec((await readAs(raw)) as string) || '')[4]
+    : window.btoa(
+        encodeURIComponent(raw).replace(/%([0-9A-F]{2})/g, (_, p1) =>
+          String.fromCharCode(+('0x' + p1))
+        )
+      );
 }
