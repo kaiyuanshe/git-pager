@@ -49,11 +49,21 @@ export default class Editor extends React.Component<{ repository: string }> {
     );
   }
 
-  async setDefaultMeta() {
+  async setPostMeta(raw?: string) {
+    const meta = { authors: [], ...(raw ? YAML.parse(raw) : null) };
     const { login } = await getCurrentUser();
 
+    if (!meta.authors.includes(login)) meta.authors.push(login);
+
+    const path = this.URL.split('/')
+      .slice(7, -1)
+      .filter(name => !name.startsWith('_'));
+
+    meta.categories = [...new Set([...path, ...(meta.categories || [])])];
+    meta.tags = meta.tags || [];
+
     this.setState({
-      meta: { title: '', date: formatDate(), authors: [login] }
+      meta: { title: '', date: formatDate(), ...meta }
     });
   }
 
@@ -63,7 +73,7 @@ export default class Editor extends React.Component<{ repository: string }> {
     const type = URL.split('.').slice(-1)[0];
 
     if (!(data instanceof Blob)) {
-      if (fileType.MarkDown.includes(type)) await this.setDefaultMeta();
+      if (fileType.MarkDown.includes(type)) await this.setPostMeta();
 
       return;
     }
@@ -78,13 +88,13 @@ export default class Editor extends React.Component<{ repository: string }> {
 
     const meta = postMeta.exec(content);
 
-    if (!meta) await this.setDefaultMeta();
+    if (!meta) await this.setPostMeta();
     else {
       content = content.slice(meta[0].length);
 
       meta[1] = meta[1].trim();
 
-      if (meta[1]) this.setState({ meta: YAML.parse(meta[1]) });
+      if (meta[1]) this.setPostMeta(meta[1]);
     }
 
     if (this.core) this.core.raw = content;
@@ -97,8 +107,15 @@ export default class Editor extends React.Component<{ repository: string }> {
     if (this.core) this.core.raw = '';
   };
 
-  onPathClear = ({ target: { value } }: React.ChangeEvent<HTMLInputElement>) =>
-    !value.trim() && this.reset();
+  onPathClear = ({
+    target: { value }
+  }: React.ChangeEvent<HTMLInputElement>) => {
+    if (value.trim()) return;
+
+    this.setState({ meta: null });
+
+    if (this.core) this.core.raw = '';
+  };
 
   fixURL = debounce(() => {
     const { repository } = this.props;
