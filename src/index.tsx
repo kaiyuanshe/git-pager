@@ -1,17 +1,22 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { parseCookie, parseURLData } from './utility';
 
-import { parseURLData } from './utility';
+import Application from './page';
 
-import PageFrame from './page';
 import navData from './index.json';
+import ApplicationModel from './model';
 
-const { repository } = parseURLData();
+const { token, repository }: any = { ...parseCookie(), ...parseURLData() };
+
+const store = new ApplicationModel(token);
 
 ReactDOM.render(
-  <PageFrame {...{ navData, repository }} />,
+  <Application {...{ navData, repository, store }} />,
   document.getElementById('root')
 );
+
+store.signIn();
 
 window.addEventListener('unhandledrejection', event => {
   const { reason } = event;
