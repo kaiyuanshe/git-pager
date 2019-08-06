@@ -107,17 +107,23 @@ export class ListField extends React.Component<FieldProps, DataMeta> {
         value[newKey] = value[oldKey];
 
         delete value[oldKey];
-        break;
+        return;
       }
+
+    value[newKey] = item.value;
   }
 
   @dataChange
-  setValue(item: DataMeta, newValue: string) {
+  setValue(item: DataMeta, newValue: any) {
     const { value } = this.state;
+
+    if (newValue instanceof Array) newValue = [...newValue];
+    else if (typeof newValue === 'object') newValue = { ...newValue };
 
     item.value = newValue;
 
-    value[item.key + ''] = newValue;
+    if (item.key != null) value[item.key + ''] = newValue;
+    else if (value instanceof Array) item.key = value.push(newValue) - 1;
   }
 
   fieldOf(index: number, type: string, value: any) {

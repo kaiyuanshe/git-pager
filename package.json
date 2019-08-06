@@ -7,19 +7,19 @@
     "node": ">=8.0.0"
   },
   "dependencies": {
-    "@octokit/rest": "^16.28.4",
+    "@octokit/rest": "^16.28.7",
     "classnames": "^2.2.6",
     "hostname-is-private": "^2.0.8",
     "koa": "^2.7.0",
-    "koa-logger": "^3.2.0",
+    "koa-logger": "^3.2.1",
     "koa-mount": "^4.0.0",
     "koa-route": "^3.2.0",
     "koa-static": "^5.0.0",
-    "leancloud-storage": "^3.14.1",
+    "leancloud-storage": "^3.15.0",
     "leanengine": "^3.4.0",
     "markdown-ime": "^1.0.3",
     "marked": "^0.7.0",
-    "mobx": "^5.11.0",
+    "mobx": "^5.13.0",
     "mobx-react": "^6.1.1",
     "node-fetch": "^2.6.0",
     "react": "^16.8.6",
@@ -30,22 +30,23 @@
   },
   "devDependencies": {
     "@types/classnames": "^2.2.9",
-    "@types/jest": "24.0.15",
+    "@types/jest": "24.0.17",
     "@types/marked": "^0.6.5",
-    "@types/node": "12.6.3",
-    "@types/react": "16.8.23",
-    "@types/react-dom": "16.8.4",
+    "@types/node": "12.6.9",
+    "@types/react": "16.8.24",
+    "@types/react-dom": "16.8.5",
     "@types/turndown": "^5.0.0",
     "@types/yaml": "^1.0.2",
-    "husky": "^3.0.0",
+    "husky": "^3.0.2",
+    "lint-staged": "^9.2.1",
     "prettier": "^1.18.2",
     "react-scripts": "3.0.1",
     "typescript": "3.5.3"
   },
   "scripts": {
     "front": "react-scripts start",
-    "format": "prettier --write \"{,!(node_modules|.git|build)/**/}*.{html,md,css,less,js,json,ts,jsx,tsx}\"",
-    "build": "npm run format  &&  react-scripts build",
+    "format": "lint-staged",
+    "build": "lint-staged  &&  react-scripts build",
     "start": "node ./server ./build LEANCLOUD_APP_PORT",
     "dev": "npm run build  &&  node --inspect ./server ./build LEANCLOUD_APP_PORT",
     "test": "react-scripts test",
@@ -54,8 +55,15 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "npm run build  &&  git add ."
+      "pre-commit": "lint-staged",
+      "pre-push": "npm test  &&  npm run build"
     }
+  },
+  "lint-staged": {
+    "*.{html,md,css,less,js,json,ts,jsx,tsx}": [
+      "prettier --write",
+      "git add"
+    ]
   },
   "eslintConfig": {
     "extends": "react-app"

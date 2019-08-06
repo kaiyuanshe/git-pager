@@ -128,7 +128,7 @@ export default class Editor extends React.Component<{ repository: string }> {
 
         if (URI.startsWith(pageURL)) URI = URI.slice(pageURL.length);
 
-        URI = new URL(URI, this.URL) + '';
+        URI = new URL(URI, this.URL || window.location.href) + '';
 
         if ('src' in element)
           element.src = URI.replace(

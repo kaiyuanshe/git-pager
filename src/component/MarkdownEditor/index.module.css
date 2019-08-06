@@ -9,6 +9,9 @@
   background: white;
   content: 'count: ' attr(data-count);
 }
+.editor:focus::before {
+  content: none;
+}
 .editor img {
   max-width: 100%;
 }

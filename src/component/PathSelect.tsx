@@ -64,11 +64,10 @@ export default class PathSelect extends CascadeSelect<
 
       if (onLoad instanceof Function)
         onLoad(html_url, blobFrom(`data:;base64,${content}`));
-    } catch (error) {
+    } catch ({ name: ErrorClass, status }) {
       if (
-        error instanceof URIError &&
-        // @ts-ignore
-        error.response.status === 404 &&
+        ErrorClass === 'HttpError' &&
+        status === 404 &&
         // @ts-ignore
         name.includes('.') &&
         onLoad instanceof Function
