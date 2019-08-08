@@ -76,18 +76,17 @@ export default class MarkdownEditor extends React.Component<EditorProps> {
 
     event.preventDefault();
 
-    var hasXML = false;
+    var list: DataTransferItem[] = Array.from(items);
 
-    const list = await Promise.all(
-      Array.from(items, (item: DataTransferItem) => {
-        if (item.kind === 'string') {
-          if (item.type !== 'text/plain') hasXML = true;
-          else if (hasXML) return '';
+    if (list.find(({ type }) => /xml|html/.test(type)))
+      list = list.filter(({ type }) => type !== 'text/plain');
 
+    const parts = await Promise.all(
+      list.map((item: DataTransferItem) => {
+        if (item.kind === 'string')
           return new Promise(resolve =>
             item.getAsString(raw => resolve(marked(raw)))
           );
-        }
 
         const file = item.getAsFile();
 
@@ -107,7 +106,7 @@ export default class MarkdownEditor extends React.Component<EditorProps> {
       })
     );
 
-    insertToCursor(...parseDOM(list.filter(Boolean).join('\n')));
+    insertToCursor(...parseDOM(parts.filter(Boolean).join('\n')));
 
     this.manualChange();
   };

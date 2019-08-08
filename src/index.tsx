@@ -27,3 +27,9 @@ window.addEventListener('unhandledrejection', event => {
 
   window.alert(reason.message);
 });
+
+if (['localhost', '127.0.0.1'].includes(window.location.hostname) === false)
+  window.addEventListener(
+    'beforeunload',
+    event => (event.returnValue = 'Exit ?')
+  );
