@@ -1,4 +1,5 @@
 import React, { createRef } from 'react';
+import classNames from 'classnames';
 
 import * as MarkdownIME from 'markdown-ime';
 import marked from 'marked';
@@ -116,8 +117,7 @@ export default class MarkdownEditor extends React.Component<EditorProps> {
       <div
         contentEditable
         ref={this.contentEditable}
-        className={`form-control ${STYLE.editor}`}
-        style={{ height: 'auto' }}
+        className={classNames('form-control', 'markdown-body', STYLE.editor)}
         data-count={this.state.count}
         onInput={this.countText as InputHandler}
         onPaste={this.handleOuterData}

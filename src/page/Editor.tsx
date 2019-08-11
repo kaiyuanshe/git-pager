@@ -1,4 +1,5 @@
-import React, { createRef } from 'react';
+import * as clipboard from 'clipboard-polyfill';
+import React, { createRef, MouseEvent } from 'react';
 
 import PathSelect, { GitContent } from '../component/PathSelect';
 import { ListField } from '../component/JSONEditor';
@@ -36,7 +37,8 @@ export default class Editor extends React.Component<{ repository: string }> {
   URL = '';
 
   state = {
-    meta: null
+    meta: null,
+    copied: false
   };
 
   static contentFilter({ type, name }: GitContent) {
@@ -212,10 +214,20 @@ ${core.raw}`;
     window.alert('Submitted');
   };
 
+  copyMarkdown = async (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+
+    if (this.core) {
+      await clipboard.writeText(this.core.raw);
+
+      this.setState({ copied: true });
+    }
+  };
+
   render() {
     const {
       props: { repository },
-      state: { meta }
+      state: { meta, copied }
     } = this;
 
     return (
@@ -244,8 +256,12 @@ ${core.raw}`;
               ></textarea>
             </span>
             <span className="col-sm-3 d-flex justify-content-between align-items-center">
-              <input type="submit" className="btn btn-primary" />
-              <input type="reset" className="btn btn-danger" />
+              <button type="submit" className="btn btn-primary">
+                Commit
+              </button>
+              <button type="reset" className="btn btn-danger">
+                Clear
+              </button>
             </span>
           </div>
 
@@ -263,6 +279,14 @@ ${core.raw}`;
 
           <div className="form-group" onInput={this.fixURL}>
             <label>Content</label>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm float-right"
+              onClick={this.copyMarkdown}
+              onBlur={() => this.setState({ copied: false })}
+            >
+              {copied ? '√' : ''} Copy MarkDown
+            </button>
             <MarkdownEditor ref={this.Core} />
           </div>
         </form>
