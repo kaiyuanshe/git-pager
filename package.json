@@ -1,0 +1,90 @@
+{
+  "name": "git-pager",
+  "version": "0.9.0",
+  "private": true,
+  "author": "shiy2008@gmail.com",
+  "engines": {
+    "node": ">=8.0.0"
+  },
+  "dependencies": {
+    "@octokit/rest": "^16.28.7",
+    "browser-unhandled-rejection": "^1.0.2",
+    "classnames": "^2.2.6",
+    "clipboard-polyfill": "^2.8.1",
+    "core-js": "^3.2.0",
+    "hostname-is-private": "^2.0.8",
+    "koa": "^2.7.0",
+    "koa-logger": "^3.2.1",
+    "koa-mount": "^4.0.0",
+    "koa-route": "^3.2.0",
+    "koa-static": "^5.0.0",
+    "leancloud-storage": "^4.0.0",
+    "leanengine": "^3.4.0",
+    "markdown-ime": "^1.0.3",
+    "marked": "^0.7.0",
+    "mobx": "^5.13.0",
+    "mobx-react": "^6.1.1",
+    "node-fetch": "^2.6.0",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "turndown": "^5.0.3",
+    "turndown-plugin-gfm": "^1.0.2",
+    "yaml": "^1.6.0"
+  },
+  "devDependencies": {
+    "@types/classnames": "^2.2.9",
+    "@types/jest": "24.0.23",
+    "@types/marked": "^0.7.2",
+    "@types/node": "12.12.14",
+    "@types/react": "16.9.13",
+    "@types/react-dom": "16.9.4",
+    "@types/turndown": "^5.0.0",
+    "@types/yaml": "^1.0.2",
+    "husky": "^3.0.2",
+    "lint-staged": "^9.2.1",
+    "prettier": "^1.18.2",
+    "react-scripts": "3.2.0",
+    "typescript": "3.7.2"
+  },
+  "scripts": {
+    "front": "react-scripts start",
+    "format": "lint-staged",
+    "build": "lint-staged  &&  react-scripts build",
+    "start": "node ./server ./build LEANCLOUD_APP_PORT",
+    "dev": "npm run build  &&  node --inspect ./server ./build LEANCLOUD_APP_PORT",
+    "test": "react-scripts test",
+    "deploy": "npm run build  &&  lean deploy",
+    "eject": "react-scripts eject"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "pre-push": "npm test -- --watchAll=false  &&  npm run build"
+    }
+  },
+  "lint-staged": {
+    "*.{html,md,css,less,js,json,ts,jsx,tsx}": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "prettier": {
+    "singleQuote": true
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 2 chrome version",
+      "last 2 firefox version",
+      "last 2 safari version",
+      "last 2 edge version"
+    ]
+  }
+}
