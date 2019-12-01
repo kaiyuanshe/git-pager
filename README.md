@@ -1,7 +1,7 @@
 # Git Pager
 
 [![NPM Dependency](https://david-dm.org/kaiyuanshe/git-pager.svg)](https://david-dm.org/kaiyuanshe/git-pager)
-[![Build Status](https://travis-ci.com/kaiyuanshe/git-pager.svg?branch=master)](https://travis-ci.com/kaiyuanshe/git-pager)
+[![Build Status](https://travis-ci.com/kaiyuanshe/git-pager.svg?branch=master)](https://travis-ci.com/kaiyuanshe/git-pager) [![Greenkeeper badge](https://badges.greenkeeper.io/kaiyuanshe/git-pager.svg)](https://greenkeeper.io/)
 
 ## 技术架构
 
