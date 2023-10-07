@@ -1,24 +1,19 @@
-import React from 'react';
 import { observer } from 'mobx-react';
+import { FC } from 'react';
 
-import NavBar, { NavBarProps } from '../component/NavBar';
-import UserBar from '../component/UserBar';
-import Editor from './Editor';
+import { NavBar, NavBarProps } from '../component/NavBar';
+import { UserBar } from '../component/UserBar';
+import ApplicationModel from '../model';
+import { Editor } from './Editor';
 
-import Application from '../model';
-
-interface FrameProps {
+export interface FrameProps {
   navData: NavBarProps;
   repository: string;
-  store: Application;
+  store: ApplicationModel;
 }
 
-export default observer(function Application({
-  navData,
-  repository,
-  store
-}: FrameProps) {
-  return (
+export const Application: FC<FrameProps> = observer(
+  ({ navData, repository, store }) => (
     <>
       <NavBar
         {...navData}
@@ -34,5 +29,5 @@ export default observer(function Application({
         <Editor repository={repository} />
       </main>
     </>
-  );
-});
+  )
+);

@@ -1,13 +1,15 @@
-import * as clipboard from 'clipboard-polyfill';
-import React, { createRef, MouseEvent } from 'react';
-
-import PathSelect, { GitContent } from '../component/PathSelect';
-import { ListField } from '../component/JSONEditor';
-import MarkdownEditor from '../component/MarkdownEditor';
-
+import { readAs } from 'koajax';
+import { observable } from 'mobx';
+import { observer } from 'mobx-react';
+import { createRef, MouseEvent, PureComponent } from 'react';
+import { blobOf, formatDate, uniqueID } from 'web-utility';
 import YAML from 'yaml';
-import { readAs, debounce, blobOf, uniqueID, formatDate } from '../utility';
+
+import { ListField } from '../component/JSONEditor';
+import { MarkdownEditor } from '../component/MarkdownEditor';
+import { GitContent, PathSelect } from '../component/PathSelect';
 import { getCurrentUser, updateContent } from '../service';
+import { debounce } from '../utility';
 
 export const pageURL = window.location.href.split('?')[0];
 
@@ -19,9 +21,16 @@ export const fileType = {
 
 export const postMeta = /^---[\r\n]([\s\S]*?)[\r\n]---/;
 
-export type HyperLink = HTMLAnchorElement & HTMLImageElement;
+export interface PostMeta
+  extends Record<'title' | 'date', string>,
+    Partial<Record<string, any>> {
+  authors?: string[];
+}
 
-export default class Editor extends React.Component<{ repository: string }> {
+export type HyperLink = HTMLAnchorElement | HTMLImageElement;
+
+@observer
+export class Editor extends PureComponent<{ repository: string }> {
   private Selector = createRef<PathSelect>();
 
   get selector() {
@@ -36,26 +45,25 @@ export default class Editor extends React.Component<{ repository: string }> {
 
   URL = '';
 
-  state = {
-    meta: null,
-    copied: false
-  };
+  @observable
+  meta?: PostMeta;
+
+  @observable
+  copied = false;
 
   static contentFilter({ type, name }: GitContent) {
     return (
       type === 'dir' ||
       (type === 'file' &&
-        Object.values(fileType)
-          .flat()
-          .includes(name.split('.').slice(-1)[0]))
+        Object.values(fileType).flat().includes(name.split('.').slice(-1)[0]))
     );
   }
 
   async setPostMeta(raw?: string) {
-    const meta = { authors: [], ...(raw ? YAML.parse(raw) : null) };
+    const meta: PostMeta = { authors: [], ...(raw ? YAML.parse(raw) : null) };
     const { login } = await getCurrentUser();
 
-    if (!meta.authors.includes(login)) meta.authors.push(login);
+    if (!meta.authors?.includes(login)) meta.authors?.push(login);
 
     const path = this.URL.split('/')
       .slice(7, -1)
@@ -64,9 +72,7 @@ export default class Editor extends React.Component<{ repository: string }> {
     meta.categories = [...new Set([...path, ...(meta.categories || [])])];
     meta.tags = meta.tags || [];
 
-    this.setState({
-      meta: { title: '', date: formatDate(), ...meta }
-    });
+    this.meta = { ...meta, title: '', date: formatDate() };
   }
 
   setContent = async (URL: string, data?: Blob) => {
@@ -79,14 +85,11 @@ export default class Editor extends React.Component<{ repository: string }> {
 
       return;
     }
+    var content = (await readAs(data, 'text').result) as string;
 
-    var content = (await readAs(data, 'Text')) as string;
+    if (fileType.JSON.includes(type)) return (this.meta = JSON.parse(content));
 
-    if (fileType.JSON.includes(type))
-      return this.setState({ meta: JSON.parse(content) });
-
-    if (fileType.YAML.includes(type))
-      return this.setState({ meta: YAML.parse(content) });
+    if (fileType.YAML.includes(type)) return (this.meta = YAML.parse(content));
 
     const meta = postMeta.exec(content);
 
@@ -103,7 +106,7 @@ export default class Editor extends React.Component<{ repository: string }> {
   };
 
   reset = () => {
-    this.setState({ meta: null });
+    this.meta = undefined;
 
     if (this.selector) this.selector.reset();
     if (this.core) this.core.raw = '';
@@ -114,7 +117,7 @@ export default class Editor extends React.Component<{ repository: string }> {
   }: React.ChangeEvent<HTMLInputElement>) => {
     if (value.trim()) return;
 
-    this.setState({ meta: null });
+    this.meta = undefined;
 
     if (this.core) this.core.raw = '';
   };
@@ -126,13 +129,14 @@ export default class Editor extends React.Component<{ repository: string }> {
       for (let element of this.core.root.querySelectorAll<HyperLink>(
         '[href], [src]'
       )) {
-        let URI = element.href || element.src;
+        let URI =
+          element instanceof HTMLAnchorElement ? element.href : element.src;
 
         if (URI.startsWith(pageURL)) URI = URI.slice(pageURL.length);
 
         URI = new URL(URI, this.URL || window.location.href) + '';
 
-        if ('src' in element)
+        if (element instanceof HTMLImageElement)
           element.src = URI.replace(
             repository + '/blob/',
             repository + '/raw/'
@@ -143,10 +147,7 @@ export default class Editor extends React.Component<{ repository: string }> {
 
   getContent() {
     const type = this.URL.split('.').slice(-1)[0],
-      {
-        state: { meta },
-        core
-      } = this;
+      { meta, core } = this;
 
     if (fileType.JSON.includes(type)) return JSON.stringify(meta);
 
@@ -218,17 +219,15 @@ ${core.raw}`;
     event.preventDefault();
 
     if (this.core) {
-      await clipboard.writeText(this.core.raw);
+      await navigator.clipboard.writeText(this.core.raw);
 
-      this.setState({ copied: true });
+      this.copied = true;
     }
   };
 
   render() {
-    const {
-      props: { repository },
-      state: { meta, copied }
-    } = this;
+    const { repository } = this.props,
+      { meta, copied } = this;
 
     return (
       <main className="card m-3">
@@ -249,11 +248,7 @@ ${core.raw}`;
           <div className="form-group row">
             <label className="col-sm-2 col-form-label">Commit message</label>
             <span className="col-sm-7">
-              <textarea
-                className="form-control"
-                name="message"
-                required
-              ></textarea>
+              <textarea className="form-control" name="message" required />
             </span>
             <span className="col-sm-3 d-flex justify-content-between align-items-center">
               <button type="submit" className="btn btn-primary">
@@ -270,9 +265,7 @@ ${core.raw}`;
               <label>Meta</label>
               <ListField
                 value={meta}
-                onChange={({ target: { value } }: any) =>
-                  this.setState({ meta: value })
-                }
+                onChange={({ target: { value } }: any) => (this.meta = value)}
               />
             </div>
           )}
@@ -283,7 +276,7 @@ ${core.raw}`;
               type="button"
               className="btn btn-secondary btn-sm float-right"
               onClick={this.copyMarkdown}
-              onBlur={() => this.setState({ copied: false })}
+              onBlur={() => (this.copied = false)}
             >
               {copied ? '√' : ''} Copy MarkDown
             </button>

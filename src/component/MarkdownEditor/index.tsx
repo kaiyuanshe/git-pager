@@ -1,18 +1,20 @@
-import React, { createRef } from 'react';
 import classNames from 'classnames';
-
 import * as MarkdownIME from 'markdown-ime';
-import marked from 'marked';
+import { marked } from 'marked';
+import { observable } from 'mobx';
+import { observer } from 'mobx-react';
+import { PureComponent, createRef } from 'react';
+import { insertToCursor, parseDOM } from 'web-utility';
+
+import { debounce } from '../../utility';
 import TurnDown from './TurnDown';
+import * as STYLE from './index.module.less';
 
-import { debounce, parseDOM, insertToCursor } from '../../utility';
-
-import STYLE from './index.module.css';
-
-type EditorProps = { rules?: any };
+export type EditorProps = { rules?: any };
 type InputHandler = (event: React.FormEvent) => void;
 
-export default class MarkdownEditor extends React.Component<EditorProps> {
+@observer
+export class MarkdownEditor extends PureComponent<EditorProps> {
   convertor: TurnDown;
   private contentEditable = createRef<HTMLDivElement>();
 
@@ -20,9 +22,8 @@ export default class MarkdownEditor extends React.Component<EditorProps> {
     return this.contentEditable.current;
   }
 
-  state = {
-    count: 0
-  };
+  @observable
+  count = 0;
 
   constructor(props: EditorProps) {
     super(props);
@@ -42,7 +43,7 @@ export default class MarkdownEditor extends React.Component<EditorProps> {
 
     if (this.root) count = (this.root.textContent || '').trim().length;
 
-    this.setState({ count });
+    this.count = count;
   });
 
   private manualChange() {
@@ -109,6 +110,10 @@ export default class MarkdownEditor extends React.Component<EditorProps> {
 
     insertToCursor(...parseDOM(parts.filter(Boolean).join('\n')));
 
+    if (this.root)
+      for (const paragraph of this.root.querySelectorAll('p p'))
+        paragraph.replaceWith(...paragraph.childNodes);
+
     this.manualChange();
   };
 
@@ -117,12 +122,17 @@ export default class MarkdownEditor extends React.Component<EditorProps> {
       <div
         contentEditable
         ref={this.contentEditable}
-        className={classNames('form-control', 'markdown-body', STYLE.editor)}
-        data-count={this.state.count}
+        className={classNames(
+          'form-control',
+          'markdown-body',
+          'h-auto',
+          STYLE.editor
+        )}
+        data-count={this.count}
         onInput={this.countText as InputHandler}
         onPaste={this.handleOuterData}
         onDrop={this.handleOuterData}
-      ></div>
+      />
     );
   }
 }

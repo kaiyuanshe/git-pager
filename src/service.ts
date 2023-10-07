@@ -1,55 +1,49 @@
-import { parseCookie, parseURLData, encodeBase64 } from './utility';
-import Octokit from '@octokit/rest';
+import { Octokit } from '@octokit/rest';
+import { parseURLData } from 'web-utility';
+
+import { encodeBase64, parseCookie } from './utility';
 
 const { token }: any = { ...parseCookie(), ...parseURLData() };
 
 const github = new Octokit({ auth: token });
 
-/**
- * @return {Promise<Object>}
- */
 export async function getCurrentUser() {
-  return (await github.users.getAuthenticated()).data;
+  const { data } = await github.users.getAuthenticated();
+
+  return data;
 }
 
-/**
- * @param {String} repository
- * @param {String} [path='']
- *
- * @return {Promise<Object|Object[]>}
- */
 export async function getContents(repository: string, path = '') {
   const [owner, repo] = repository.split('/');
 
-  return (await github.repos.getContents({ owner, repo, path })).data;
+  const { data } = await github.repos.getContent({ owner, repo, path });
+
+  return data;
 }
 
-/**
- * @param {String}      repository
- * @param {String}      path
- * @param {String}      message
- * @param {String|Blob} data
- *
- * @return {Promise<Object>}
- */
 export async function updateContent(
   repository: string,
   path: string,
   message: string,
-  data: string | Blob
+  content: string | Blob
 ) {
   const [owner, repo] = repository.split('/');
 
   try {
-    var sha = (await getContents(repository, path)).sha;
+    const data = await getContents(repository, path);
+
+    var { sha } = data instanceof Array ? data[0] : data;
   } catch {}
 
-  return (await github.repos.createOrUpdateFile({
+  const { data } = await github.repos.createOrUpdateFileContents({
     owner,
     repo,
     path,
     message,
-    content: await encodeBase64(data),
+    content: await encodeBase64(content),
+    // @ts-ignore
     sha
-  })).data;
+  });
+
+  return data;
 }
