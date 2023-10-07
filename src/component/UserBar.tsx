@@ -1,15 +1,17 @@
-import React from 'react';
 import { observer } from 'mobx-react';
+import { FC } from 'react';
 
-export default observer(function UserBar({ name, avatar_url, html_url, blog }) {
-  return (
-    <a href={blog || html_url} title={name}>
+import { User } from '../model';
+
+export const UserBar: FC<User> = observer(
+  ({ name, avatar_url, html_url, blog }) => (
+    <a href={blog || html_url} title={name!}>
       <img
         className="img-thumbnail"
         style={{ width: '2.5rem' }}
-        alt={name}
+        alt={name!}
         src={avatar_url}
       />
     </a>
-  );
-});
+  )
+);

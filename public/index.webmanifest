@@ -1,0 +1,20 @@
+{
+  "name": "Git Pager",
+  "short_name": "Git Pager",
+  "start_url": ".",
+  "description": "Post Editor for MarkDown static Web-site generators (Hexo etc.) based on GitHub API",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "any",
+  "lang": "en-US",
+  "dir": "ltr",
+  "theme_color": "rgba(0,0,0,0.5)",
+  "background_color": "transparent",
+  "icons": [
+    {
+      "src": "https://raw.githubusercontent.com/github/explore/78df643247d429f6cc873026c0622819ad797942/topics/github/github.png",
+      "type": "image/png",
+      "sizes": "288x288"
+    }
+  ]
+}

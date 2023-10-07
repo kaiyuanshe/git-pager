@@ -1,12 +1,13 @@
-import React from 'react';
+import { observable } from 'mobx';
+import { observer } from 'mobx-react';
+import { ChangeEvent, PureComponent, ReactFragment } from 'react';
 
-import AddBar from './AddBar';
-
+import { AddBar } from './AddBar';
 import { DataMeta } from './types';
 
-interface FieldProps {
-  value: Object | Array<any> | null;
-  onChange?: (event: React.ChangeEvent) => void;
+export interface FieldProps {
+  value: object | any[] | null;
+  onChange?: (event: ChangeEvent) => void;
 }
 
 function dataChange(
@@ -15,13 +16,13 @@ function dataChange(
   descriptor: PropertyDescriptor
 ) {
   const method = target[propertyKey];
-  // @ts-ignore
-  descriptor.value = function(
-    this: React.Component<FieldProps, DataMeta>,
+
+  descriptor.value = function (
+    this: ListField,
     index: number,
     { target: { value: data } }: any
   ) {
-    const { children = [] } = this.state;
+    const { children = [] } = this.innerValue;
 
     const item = children[index];
 
@@ -29,42 +30,36 @@ function dataChange(
 
     method.call(this, item, data);
 
-    const { onChange } = this.props;
-
-    if (onChange instanceof Function)
-      // @ts-ignore
-      onChange({ target: { value: this.state.value } });
+    this.props.onChange?.({
+      target: { value: this.innerValue.value }
+    } as unknown as ChangeEvent);
   };
 }
 
-export class ListField extends React.Component<FieldProps, DataMeta> {
-  state = {
-    ...ListField.metaOf(this.props.value)
-  };
+@observer
+export class ListField extends PureComponent<FieldProps, DataMeta> {
+  @observable
+  innerValue = ListField.metaOf(this.props.value);
 
   static metaOf(value: any): DataMeta {
     if (value instanceof Array)
       return {
         type: 'array',
         value,
-        children: Array.from(value, (value, key) => {
-          return {
-            ...this.metaOf(value),
-            key
-          };
-        })
+        children: Array.from(value, (value, key) => ({
+          ...this.metaOf(value),
+          key
+        }))
       };
 
     if (value instanceof Object)
       return {
         type: 'object',
         value,
-        children: Object.entries(value).map(([key, value]) => {
-          return {
-            ...this.metaOf(value),
-            key
-          };
-        })
+        children: Object.entries(value).map(([key, value]) => ({
+          ...this.metaOf(value),
+          key
+        }))
       };
 
     return {
@@ -74,7 +69,8 @@ export class ListField extends React.Component<FieldProps, DataMeta> {
   }
 
   addItem = (type: string) => {
-    var item: DataMeta = { type, value: [] };
+    var item: DataMeta = { type, value: [] },
+      { innerValue } = this;
 
     switch (type) {
       case 'string':
@@ -90,20 +86,20 @@ export class ListField extends React.Component<FieldProps, DataMeta> {
         item = ListField.metaOf([]);
     }
 
-    this.setState({
-      ...this.state,
-      children: (this.state.children || []).concat(item)
-    });
+    this.innerValue = {
+      ...innerValue,
+      children: [...(innerValue.children || []), item]
+    };
   };
 
   @dataChange
   setKey(item: DataMeta, newKey: string) {
-    const { value, children = [] } = this.state;
+    const { value, children = [] } = this.innerValue;
 
     item.key = newKey;
 
     for (let oldKey in value)
-      if (!children.find(({ key }) => key === oldKey)) {
+      if (!children.some(({ key }) => key === oldKey)) {
         value[newKey] = value[oldKey];
 
         delete value[oldKey];
@@ -115,7 +111,7 @@ export class ListField extends React.Component<FieldProps, DataMeta> {
 
   @dataChange
   setValue(item: DataMeta, newValue: any) {
-    const { value } = this.state;
+    const { value } = this.innerValue;
 
     if (newValue instanceof Array) newValue = [...newValue];
     else if (typeof newValue === 'object') newValue = { ...newValue };
@@ -147,7 +143,7 @@ export class ListField extends React.Component<FieldProps, DataMeta> {
             placeholder="Value"
             // @ts-ignore
             onBlur={this.setValue.bind(this, index)}
-          ></textarea>
+          />
         );
       default:
         return (
@@ -157,16 +153,14 @@ export class ListField extends React.Component<FieldProps, DataMeta> {
     }
   }
 
-  wrapper(slot: React.ReactFragment) {
-    return this.state.type === 'array' ? (
-      <ol className="inline-form">{slot}</ol>
-    ) : (
-      <ul className="inline-form">{slot}</ul>
-    );
+  wrapper(slot: ReactFragment) {
+    const Tag = this.innerValue.type === 'array' ? 'ol' : 'ul';
+
+    return <Tag className="inline-form">{slot}</Tag>;
   }
 
   render() {
-    const { type: field_type, children = [] } = this.state;
+    const { type: field_type, children = [] } = this.innerValue;
 
     return this.wrapper(
       <>

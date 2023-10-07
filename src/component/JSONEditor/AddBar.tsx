@@ -1,4 +1,4 @@
-import React from 'react';
+import { FC } from 'react';
 
 const type_map = {
   string: { title: 'Inline text', icon: 'grip-lines' },
@@ -7,22 +7,20 @@ const type_map = {
   array: { title: 'Ordered list', icon: 'list-ol' }
 };
 
-interface AddBarProps {
+export interface AddBarProps {
   onSelect: (type: string) => void;
 }
 
-export default function AddBar({ onSelect }: AddBarProps) {
-  return (
-    <nav>
-      {Object.entries(type_map).map(([key, { title, icon }]) => (
-        <button
-          key={key}
-          type="button"
-          className={'btn btn-sm btn-success m-1 fas fa-' + icon}
-          title={title}
-          onClick={onSelect.bind(null, key)}
-        ></button>
-      ))}
-    </nav>
-  );
-}
+export const AddBar: FC<AddBarProps> = ({ onSelect }) => (
+  <nav>
+    {Object.entries(type_map).map(([key, { title, icon }]) => (
+      <button
+        key={key}
+        type="button"
+        className={'btn btn-sm btn-success m-1 fas fa-' + icon}
+        title={title}
+        onClick={onSelect.bind(null, key)}
+      />
+    ))}
+  </nav>
+);

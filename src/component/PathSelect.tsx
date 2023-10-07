@@ -1,42 +1,40 @@
-import React from 'react';
-import CascadeSelect, { CascadeProps, CascadeState } from './CascadeSelect';
+import { observable } from 'mobx';
+import { observer } from 'mobx-react';
+import { blobFrom } from 'web-utility';
 
-import { blobFrom } from '../utility';
 import { getContents } from '../service';
+import { CascadeProps, CascadeSelect } from './CascadeSelect';
 
 export interface GitContent {
   type: string;
   name: string;
 }
 
-interface SelectProps extends CascadeProps {
+export interface SelectProps extends CascadeProps {
   repository: string;
   filter?: (content: GitContent) => boolean;
   onLoad?: (URL: string, data?: Blob) => void;
 }
 
-interface SelectState extends CascadeState {
-  html_url: string;
-}
+@observer
+export class PathSelect extends CascadeSelect<SelectProps> {
+  @observable
+  html_url = '';
 
-export default class PathSelect extends CascadeSelect<
-  SelectProps,
-  SelectState
-> {
   filter: (name: GitContent) => boolean;
 
   constructor(props: SelectProps) {
     super(props);
 
     this.filter = props.filter instanceof Function ? props.filter : Boolean;
-    // @ts-ignore
-    this.state.html_url = '';
+
+    this.html_url = '';
   }
 
   reset() {
     super.reset();
 
-    this.setState({ html_url: '' });
+    this.html_url = '';
   }
 
   async getNextLevel() {
@@ -56,15 +54,17 @@ export default class PathSelect extends CascadeSelect<
           list: contents.filter(this.filter).map(({ name }) => name)
         };
 
-      const { type, content, html_url } = contents;
+      const { type, html_url } = contents;
 
-      if (type !== 'file') return;
+      if (type !== 'file' || !html_url) return;
 
-      this.setState({ html_url });
+      this.html_url = html_url;
 
-      if (onLoad instanceof Function)
-        onLoad(html_url, blobFrom(`data:;base64,${content}`));
-    } catch ({ name: ErrorClass, status }) {
+      if ('content' in contents)
+        onLoad?.(html_url, blobFrom(`data:;base64,${contents.content}`));
+    } catch (error) {
+      const { name: ErrorClass, status } = error as any;
+
       if (
         ErrorClass === 'HttpError' &&
         status === 404 &&
@@ -77,8 +77,7 @@ export default class PathSelect extends CascadeSelect<
   }
 
   render() {
-    // @ts-ignore
-    const { html_url } = this.state;
+    const { html_url } = this;
 
     return (
       <>

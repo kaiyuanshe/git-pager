@@ -1,13 +1,10 @@
-import React from 'react';
-import { uniqueID, debounce } from '../utility';
+import { Component } from 'react';
+import { uniqueID } from 'web-utility';
+
+import { debounce } from '../utility';
 
 export interface CascadeProps {
   required: boolean;
-}
-
-export interface CascadeState {
-  path?: string[];
-  list: any[][];
 }
 
 interface LevelItem {
@@ -15,68 +12,60 @@ interface LevelItem {
   list: string[];
 }
 
-export default abstract class CascadeSelect<
-  P extends CascadeProps,
-  S extends CascadeState
-> extends React.Component<P, S> {
+export abstract class CascadeSelect<
+  P extends CascadeProps
+> extends Component<P> {
   UID = uniqueID();
-  // @ts-ignore
-  state = {
-    path: [],
-    list: []
-  };
+
+  innerPath: string[] = [];
+
+  list: LevelItem[] = [];
 
   get path() {
-    return this.state.path
-      .filter(Boolean)
-      .slice(0, -1)
-      .join('/');
+    return this.innerPath.filter(Boolean).slice(0, -1).join('/');
   }
 
   get name() {
-    return this.state.path.slice(-1)[0];
+    return this.innerPath.slice(-1)[0];
   }
 
   get pathName() {
-    return this.state.path.filter(Boolean).join('/');
+    return this.innerPath.filter(Boolean).join('/');
   }
 
   reset() {
-    const { path, list } = this.state;
+    const { innerPath, list } = this;
 
-    this.setState({ path: [path[0]], list: [list[0]] });
+    this.innerPath = [innerPath[0]];
+    this.list = [list[0]];
   }
 
   componentDidMount() {
     this.changeLevel(-1, '');
   }
 
-  abstract async getNextLevel(): Promise<LevelItem | undefined>;
+  abstract getNextLevel(): Promise<LevelItem | undefined>;
 
   changeLevel = debounce(async (index: number, value: string) => {
-    const { path, list } = this.state;
-    // @ts-ignore
-    path.splice(index, Infinity, value);
+    const { innerPath, list } = this;
+
+    innerPath.splice(index, Infinity, value);
 
     const level = await this.getNextLevel();
-    // @ts-ignore
+
     if (level != null) list.splice(++index, Infinity, level);
     else list.length = ++index;
 
-    this.setState({ list });
+    this.list = list;
   });
 
   render() {
-    const {
-      UID,
-      state: { list },
-      // @ts-ignore
-      props: { required }
-    } = this;
+    const { UID, list } = this,
+      { required } = this.props;
 
     return (
       <>
-        {list.map(({ label, list }: LevelItem, index) => {
+        {list.map(({ label, list }, index) => {
           const IID = `input-${UID}-${index}`,
             LID = `list-${UID}-${index}`;
 

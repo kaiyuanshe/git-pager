@@ -1,23 +1,37 @@
 import 'core-js/es/object/from-entries';
 // @ts-ignore
 import { auto } from 'browser-unhandled-rejection';
-
-import React from 'react';
-import ReactDOM from 'react-dom';
-import { parseCookie, parseURLData } from './utility';
-
-import Application from './page';
+import { render } from 'react-dom';
+import { parseURLData, serviceWorkerUpdate } from 'web-utility';
 
 import navData from './index.json';
 import ApplicationModel from './model';
+import { Application } from './page';
+import { parseCookie } from './utility';
 
 auto();
+
+const { serviceWorker } = window.navigator,
+  NODE_ENV = process.env.NODE_ENV || 'development';
+
+if (NODE_ENV !== 'development')
+  serviceWorker
+    ?.register('sw.js')
+    .then(serviceWorkerUpdate)
+    .then(worker => {
+      if (window.confirm('New version of this Web App detected, update now?'))
+        worker.postMessage({ type: 'SKIP_WAITING' });
+    });
+
+serviceWorker?.addEventListener('controllerchange', () =>
+  window.location.reload()
+);
 
 const { token, repository }: any = { ...parseCookie(), ...parseURLData() };
 
 const store = new ApplicationModel(token);
 
-ReactDOM.render(
+render(
   <Application {...{ navData, repository, store }} />,
   document.getElementById('root')
 );
